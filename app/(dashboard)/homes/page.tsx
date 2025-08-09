@@ -50,26 +50,26 @@ export default function HomesPage() {
               >
                 <Link href={`/homes/${home.id}`}>
                   <Card className="hover:shadow-md transition-shadow cursor-pointer overflow-hidden bg-white border border-gray-200 rounded-lg">
-                    <div className="aspect-video relative bg-gray-100">
-                      {home.image_url ? (
-                        <Image
-                          src={home.image_url || "/placeholder.svg"}
-                          alt={home.nickname || "Home"}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full">
-                          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                            <Home className="w-8 h-8 text-blue-500" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
                     <CardContent className="p-6">
-                      <h3 className="text-xl font-semibold mb-2 text-gray-800">
+                      <h3 className="text-lg font-bold mb-4 text-gray-800">
                         {home.nickname || "Unnamed Home"}
                       </h3>
+                      <div className="aspect-video relative rounded-xl bg-gray-100 mb-4">
+                        {home.image_url ? (
+                          <Image
+                            src={home.image_url || "/placeholder.svg"}
+                            alt={home.nickname || "Home"}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full">
+                            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                              <Home className="w-8 h-8 text-blue-500" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       {home.address && (
                         <div className="flex items-center text-gray-600 mb-2">
                           <MapPin className="w-4 h-4 mr-2" />

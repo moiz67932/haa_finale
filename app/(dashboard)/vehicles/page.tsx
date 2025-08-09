@@ -51,28 +51,28 @@ export default function VehiclesPage() {
               >
                 <Link href={`/vehicles/${vehicle.id}`}>
                   <Card className="hover:shadow-md transition-shadow cursor-pointer overflow-hidden bg-white border border-gray-200 rounded-lg">
-                    <div className="aspect-video relative bg-gray-100">
-                      {vehicle.image_url ? (
-                        <Image
-                          src={vehicle.image_url || "/placeholder.svg"}
-                          alt={vehicle.nickname || "Vehicle"}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full">
-                          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                            <Car className="w-8 h-8 text-blue-500" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
                     <CardContent className="p-6">
-                      <h3 className="text-xl font-semibold mb-2 text-gray-800">
+                      <h3 className="text-lg font-bold mb-4 text-gray-800">
                         {vehicle.nickname ||
                           `${vehicle.year} ${vehicle.make} ${vehicle.model}`}
                       </h3>
-                      <p className="text-gray-600 mb-2">
+                      <div className="aspect-video relative bg-gray-100 mb-4 rounded-xl overflow-hidden">
+                        {vehicle.image_url ? (
+                          <Image
+                            src={vehicle.image_url || "/placeholder.svg"}
+                            alt={vehicle.nickname || "Vehicle"}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full">
+                            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                              <Car className="w-8 h-8 text-blue-500" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-gray-500 mb-2">
                         {vehicle.year} {vehicle.make} {vehicle.model}
                       </p>
                       {vehicle.mileage && (
