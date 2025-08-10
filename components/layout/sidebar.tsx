@@ -53,8 +53,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex h-16 items-center px-6">
         <Link href="/dashboard" className="flex items-center space-x-2">
-          <Image src="/logo.svg" alt="HAA" width={32} height={32} />
-          <span className="text-xl font-bold text-gray-900">HAA</span>
+          <Image src="/Logo.jpg" alt="HAA" width={110} height={110} />
         </Link>
       </div>
 
