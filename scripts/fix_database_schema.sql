@@ -1,4 +1,29 @@
--- Enable RLS
+-- Ensure all necessary columns are present in the tables
+-- Add nickname and address columns to homes table if they don't exist
+ALTER TABLE public.homes ADD COLUMN IF NOT EXISTS nickname TEXT;
+ALTER TABLE public.homes ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE public.homes ADD COLUMN IF NOT EXISTS image_url TEXT; -- Ensure image_url is also present
+
+-- Add mileage column to vehicles table if it doesn't exist
+ALTER TABLE public.vehicles ADD COLUMN IF NOT EXISTS mileage BIGINT; -- Use BIGINT for mileage
+ALTER TABLE public.vehicles ADD COLUMN IF NOT EXISTS image_url TEXT; -- Ensure image_url is also present
+
+-- Add address column to service_providers table if it doesn't exist
+ALTER TABLE public.service_providers ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE public.service_providers ADD COLUMN IF NOT EXISTS image_url TEXT; -- Ensure image_url is also present
+
+-- Ensure other tables have image_url if needed
+ALTER TABLE public.rooms ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE public.outside_items ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE public.purchases ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE public.maintenances ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE public.improvements ADD COLUMN IF NOT EXISTS image_url TEXT;
+-- Use singular table name consistently
+ALTER TABLE public.vehicle_maintenance ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE public.vehicle_repairs ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS image_url TEXT;
+
+-- Enable RLS on all tables (important for security)
 ALTER TABLE public.homes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rooms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.outside_items ENABLE ROW LEVEL SECURITY;
@@ -11,6 +36,67 @@ ALTER TABLE public.vehicle_repairs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.service_providers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist (to avoid conflicts when recreating)
+DROP POLICY IF EXISTS "Users can view own homes" ON public.homes;
+DROP POLICY IF EXISTS "Users can insert own homes" ON public.homes;
+DROP POLICY IF EXISTS "Users can update own homes" ON public.homes;
+DROP POLICY IF EXISTS "Users can delete own homes" ON public.homes;
+
+DROP POLICY IF EXISTS "Users can view own rooms" ON public.rooms;
+DROP POLICY IF EXISTS "Users can insert own rooms" ON public.rooms;
+DROP POLICY IF EXISTS "Users can update own rooms" ON public.rooms;
+DROP POLICY IF EXISTS "Users can delete own rooms" ON public.rooms;
+
+DROP POLICY IF EXISTS "Users can view own outside_items" ON public.outside_items;
+DROP POLICY IF EXISTS "Users can insert own outside_items" ON public.outside_items;
+DROP POLICY IF EXISTS "Users can update own outside_items" ON public.outside_items;
+DROP POLICY IF EXISTS "Users can delete own outside_items" ON public.outside_items;
+
+DROP POLICY IF EXISTS "Users can view own purchases" ON public.purchases;
+DROP POLICY IF EXISTS "Users can insert own purchases" ON public.purchases;
+DROP POLICY IF EXISTS "Users can update own purchases" ON public.purchases;
+DROP POLICY IF EXISTS "Users can delete own purchases" ON public.purchases;
+
+DROP POLICY IF EXISTS "Users can view own maintenances" ON public.maintenances;
+DROP POLICY IF EXISTS "Users can insert own maintenances" ON public.maintenances;
+DROP POLICY IF EXISTS "Users can update own maintenances" ON public.maintenances;
+DROP POLICY IF EXISTS "Users can delete own maintenances" ON public.maintenances;
+
+DROP POLICY IF EXISTS "Users can view own improvements" ON public.improvements;
+DROP POLICY IF EXISTS "Users can insert own improvements" ON public.improvements;
+DROP POLICY IF EXISTS "Users can update own improvements" ON public.improvements;
+DROP POLICY IF EXISTS "Users can delete own improvements" ON public.improvements;
+
+DROP POLICY IF EXISTS "Users can view own vehicles" ON public.vehicles;
+DROP POLICY IF EXISTS "Users can insert own vehicles" ON public.vehicles;
+DROP POLICY IF EXISTS "Users can update own vehicles" ON public.vehicles;
+DROP POLICY IF EXISTS "Users can delete own vehicles" ON public.vehicles;
+
+DROP POLICY IF EXISTS "Users can view own vehicle_maintenance" ON public.vehicle_maintenance;
+DROP POLICY IF EXISTS "Users can insert own vehicle_maintenance" ON public.vehicle_maintenance;
+DROP POLICY IF EXISTS "Users can update own vehicle_maintenance" ON public.vehicle_maintenance;
+DROP POLICY IF EXISTS "Users can delete own vehicle_maintenance" ON public.vehicle_maintenance;
+
+DROP POLICY IF EXISTS "Users can view own vehicle_repairs" ON public.vehicle_repairs;
+DROP POLICY IF EXISTS "Users can insert own vehicle_repairs" ON public.vehicle_repairs;
+DROP POLICY IF EXISTS "Users can update own vehicle_repairs" ON public.vehicle_repairs;
+DROP POLICY IF EXISTS "Users can delete own vehicle_repairs" ON public.vehicle_repairs;
+
+DROP POLICY IF EXISTS "Users can view own notifications" ON public.notifications;
+DROP POLICY IF EXISTS "Users can insert own notifications" ON public.notifications;
+DROP POLICY IF EXISTS "Users can update own notifications" ON public.notifications;
+DROP POLICY IF EXISTS "Users can delete own notifications" ON public.notifications;
+
+DROP POLICY IF EXISTS "All users can view service_providers" ON public.service_providers;
+DROP POLICY IF EXISTS "Users can insert own service_providers" ON public.service_providers;
+DROP POLICY IF EXISTS "Users can update own service_providers" ON public.service_providers;
+DROP POLICY IF EXISTS "Users can delete own service_providers" ON public.service_providers;
+
+DROP POLICY IF EXISTS "All users can view posts" ON public.posts;
+DROP POLICY IF EXISTS "Users can insert own posts" ON public.posts;
+DROP POLICY IF EXISTS "Users can update own posts" ON public.posts;
+DROP POLICY IF EXISTS "Users can delete own posts" ON public.posts;
 
 -- Create RLS policies for user-scoped tables
 CREATE POLICY "Users can view own homes" ON public.homes FOR SELECT USING (auth.uid() = user_id);
@@ -74,7 +160,7 @@ CREATE POLICY "Users can insert own posts" ON public.posts FOR INSERT WITH CHECK
 CREATE POLICY "Users can update own posts" ON public.posts FOR UPDATE USING (auth.uid() = created_by);
 CREATE POLICY "Users can delete own posts" ON public.posts FOR DELETE USING (auth.uid() = created_by);
 
--- Create the summaries function
+-- Recreate the summaries function to ensure it works with RLS
 CREATE OR REPLACE FUNCTION public.summaries()
 RETURNS TABLE (
   homes_count bigint,
@@ -93,7 +179,16 @@ BEGIN
 END;
 $$;
 
--- Create triggers for notifications
+-- Grant necessary permissions
+GRANT USAGE ON SCHEMA public TO authenticated;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+GRANT EXECUTE ON FUNCTION public.summaries() TO authenticated;
+
+-- Create triggers for notifications (recreate them to ensure they work)
+DROP TRIGGER IF EXISTS maintenance_notification_trigger ON public.maintenances;
+DROP TRIGGER IF EXISTS vehicle_maintenance_notification_trigger ON public.vehicle_maintenance;
+
 CREATE OR REPLACE FUNCTION create_maintenance_notification()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -102,14 +197,14 @@ BEGIN
     VALUES (
       NEW.user_id,
       'maintenance',
-      NEW.id::TEXT,
+      NEW.id,
       'Maintenance due: ' || COALESCE(NEW.task_name, 'Unnamed task'),
       NEW.due_date
     );
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION create_vehicle_maintenance_notification()
 RETURNS TRIGGER AS $$
@@ -119,14 +214,14 @@ BEGIN
     VALUES (
       NEW.user_id,
       'vehicle_maintenance',
-      NEW.id::TEXT,
+      NEW.id,
       'Vehicle service due: ' || COALESCE(NEW.service_type, 'Service'),
       NEW.next_service_date
     );
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE TRIGGER maintenance_notification_trigger
   AFTER INSERT ON public.maintenances
@@ -137,28 +232,3 @@ CREATE TRIGGER vehicle_maintenance_notification_trigger
   AFTER INSERT ON public.vehicle_maintenance
   FOR EACH ROW
   EXECUTE FUNCTION create_vehicle_maintenance_notification();
-
--- Add missing columns to service_providers table
-ALTER TABLE service_providers
-ADD COLUMN category VARCHAR(255) NOT NULL DEFAULT 'Other';
-
--- Add missing columns to vehicles table
-ALTER TABLE vehicles
-ADD COLUMN nickname VARCHAR(255);
-
-ALTER TABLE service_providers
-ADD COLUMN email VARCHAR(255);
-
-ALTER TABLE service_providers
-ADD COLUMN phone VARCHAR(20);
-
-ALTER TABLE service_providers
-ADD COLUMN rating NUMERIC(3, 2);
-
-ALTER TABLE service_providers
-ADD COLUMN tags TEXT[];
-
--- Add missing 'website' column to service_providers table
-ALTER TABLE service_providers
-ADD COLUMN website VARCHAR(255);
-

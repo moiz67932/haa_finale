@@ -142,7 +142,7 @@ export type Database = {
           created_at?: string;
         };
       };
-      maintenances: {
+      home_maintenance: {
         Row: {
           id: string;
           home_id: string;
@@ -177,7 +177,7 @@ export type Database = {
           created_at?: string;
         };
       };
-      improvements: {
+      home_improvements: {
         Row: {
           id: string;
           home_id: string;
@@ -244,11 +244,12 @@ export type Database = {
           created_at?: string;
         };
       };
-      vehicle_maintenances: {
+      vehicle_maintenance: {
         Row: {
           id: string;
           vehicle_id: string;
           user_id: string;
+          service_company: string | null;
           service_type: string | null;
           service_date: string | null;
           mileage: number | null;
@@ -263,6 +264,7 @@ export type Database = {
           id?: string;
           vehicle_id: string;
           user_id: string;
+          service_company?: string | null;
           service_type?: string | null;
           service_date?: string | null;
           mileage?: number | null;

@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase";
 
-export async function uploadFile(
+export async function uploadPublicImage(
   file: File,
   folder = "general"
 ): Promise<string | null> {
@@ -21,7 +21,6 @@ export async function uploadFile(
     }
 
     const { data } = supabase.storage.from("uploads").getPublicUrl(filePath);
-
     return data.publicUrl;
   } catch (error) {
     console.error("Storage error:", error);
