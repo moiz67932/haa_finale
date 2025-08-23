@@ -397,7 +397,16 @@ export default function LandingPage() {
             </div>
 
             <div className="flex justify-center">
-              <div className="bg-white rounded-2xl p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:rotate-2 transform">
+              <motion.div
+                className="bg-white rounded-2xl p-3 shadow-lg hover:shadow-xl transition-all duration-300 transform"
+                animate={{ y: [0, -6, 0] }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                whileHover={{ scale: 1.03 }}
+              >
                 <div className="w-full h-90 bg-white rounded-xl flex items-center justify-center">
                   <div className="text-gray-400 text-6xl">
                     <Image
@@ -409,7 +418,7 @@ export default function LandingPage() {
                     />
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
 
