@@ -1,8 +1,14 @@
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
 
 const config: Config = {
   darkMode: ["class"],
-  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}", "*.{js,ts,jsx,tsx,mdx}"],
+  content: [
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+    "*.{js,ts,jsx,tsx,mdx}",
+  ],
   prefix: "",
   theme: {
     container: {
@@ -14,7 +20,7 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ["Inter", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -23,7 +29,8 @@ const config: Config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#0056B3",
+          // more vibrant primary (vivid blue)
+          DEFAULT: "#0B63E6",
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
@@ -31,8 +38,22 @@ const config: Config = {
           foreground: "hsl(var(--secondary-foreground))",
         },
         accent: {
+          // warm vivid accent (orange)
           DEFAULT: "#FF7A00",
           foreground: "hsl(var(--accent-foreground))",
+        },
+        // Override Tailwind's gray palette with a more vibrant, blue-tinged neutral
+        gray: {
+          50: "#f5fbff",
+          100: "#e6f4ff",
+          200: "#cce8ff",
+          300: "#99d4ff",
+          400: "#66bfff",
+          500: "#339bff",
+          600: "#0077e6",
+          700: "#005bb3",
+          800: "#004077",
+          900: "#012033",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -78,6 +99,6 @@ const config: Config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config
+} satisfies Config;
 
-export default config
+export default config;

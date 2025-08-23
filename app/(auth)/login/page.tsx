@@ -122,8 +122,8 @@ export default function LoginPage() {
 
       <Card className="bg-white/95 backdrop-blur">
         <CardHeader className="text-center pb-8">
-          <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Image src="/logo.svg" alt="HAA" width={32} height={32} />
+          <div className="w-32 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Image src="/Logo.jpg" alt="HAA" width={220} height={220} />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
           <p className="text-gray-600">Sign in to your HAA account</p>
@@ -205,7 +205,7 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="w-full bg-primary hover:bg-primary/90"
+              className="w-full text-white bg-primary hover:bg-primary/90"
               disabled={isLoading}
             >
               {isLoading ? "Signing In..." : "Sign In"}

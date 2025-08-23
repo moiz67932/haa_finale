@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -29,6 +29,7 @@ const vehicleMaintenanceSchema = z.object({
   notes: z.string().optional(),
   next_service_mileage: z.number().min(0).optional(),
   next_service_date: z.string().optional(),
+  oil_change_interval: z.number().optional(),
 });
 
 type VehicleMaintenanceForm = z.infer<typeof vehicleMaintenanceSchema>;
@@ -52,10 +53,37 @@ export function CreateVehicleMaintenanceDialog({
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<VehicleMaintenanceForm>({
     resolver: zodResolver(vehicleMaintenanceSchema),
   });
+
+  const serviceTypeValue = watch("service_type");
+  const mileageValue = watch("mileage");
+  const oilIntervalValue = watch("oil_change_interval");
+
+  useEffect(() => {
+    // When service type is Oil Change and we have a valid mileage and interval,
+    // compute and set the next service mileage automatically.
+    try {
+      if (
+        serviceTypeValue &&
+        serviceTypeValue.toLowerCase() === "oil change" &&
+        typeof mileageValue === "number" &&
+        typeof oilIntervalValue === "number"
+      ) {
+        const next = Math.round(mileageValue + oilIntervalValue);
+        setValue("next_service_mileage", next, {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [serviceTypeValue, mileageValue, oilIntervalValue, setValue]);
 
   const onSubmit = async (data: VehicleMaintenanceForm) => {
     try {
@@ -267,6 +295,31 @@ export function CreateVehicleMaintenanceDialog({
                 />
               </div>
             </div>
+
+            {/* Oil change interval: only show when service type is Oil Change */}
+            {serviceTypeValue &&
+              serviceTypeValue.toLowerCase() === "oil change" && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">
+                    Oil Change Interval (miles)
+                  </Label>
+                  <select
+                    {...register("oil_change_interval", {
+                      valueAsNumber: true,
+                    })}
+                    className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select interval</option>
+                    <option value={3000}>3,000 miles</option>
+                    <option value={4000}>4,000 miles</option>
+                    <option value={5000}>5,000 miles</option>
+                  </select>
+                  <p className="text-sm text-gray-500">
+                    Selecting an interval will auto-calculate the next service
+                    mileage based on the current mileage.
+                  </p>
+                </div>
+              )}
 
             <div className="space-y-2">
               <Label

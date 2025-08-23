@@ -47,6 +47,12 @@ export function CreateRoomDialog({
 }: CreateRoomDialogProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState("");
+  const [category, setCategory] = useState<string>("");
+  const [features, setFeatures] = useState({
+    warranty: true,
+    installer: true,
+    purchase: true,
+  });
   const createRoomMutation = useCreateRoom();
 
   const {
@@ -69,20 +75,22 @@ export function CreateRoomDialog({
         }
       }
 
-      // Build warranty JSON
+      // Build warranty JSON only if warranty feature is enabled
       let warranty_json = null;
-      if (
-        data.warranty_provider ||
-        data.warranty_start_date ||
-        data.warranty_end_date ||
-        data.warranty_notes
-      ) {
-        warranty_json = {
-          provider: data.warranty_provider || null,
-          start_date: data.warranty_start_date || null,
-          end_date: data.warranty_end_date || null,
-          notes: data.warranty_notes || null,
-        };
+      if (features.warranty) {
+        if (
+          data.warranty_provider ||
+          data.warranty_start_date ||
+          data.warranty_end_date ||
+          data.warranty_notes
+        ) {
+          warranty_json = {
+            provider: data.warranty_provider || null,
+            start_date: data.warranty_start_date || null,
+            end_date: data.warranty_end_date || null,
+            notes: data.warranty_notes || null,
+          };
+        }
       }
 
       await createRoomMutation.mutateAsync({
@@ -90,8 +98,8 @@ export function CreateRoomDialog({
         name: data.name,
         paint_color: data.paint_color || null,
         flooring: data.flooring || null,
-        installer: data.installer || null,
-        purchase_from: data.purchase_from || null,
+        installer: features.installer ? data.installer || null : null,
+        purchase_from: features.purchase ? data.purchase_from || null : null,
         warranty_json,
         image_url: finalImageUrl || null,
       });
@@ -217,6 +225,61 @@ export function CreateRoomDialog({
               </div>
             </div>
 
+            {/* Category + Feature Toggles */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Category
+              </Label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md"
+              >
+                <option value="">Select category</option>
+                <option value="electrical">Electrical</option>
+                <option value="lighting">Lighting</option>
+                <option value="tv_mounting">TV Mounting</option>
+                <option value="plumbing">Plumbing</option>
+                <option value="other">Other</option>
+              </select>
+
+              <div className="flex items-center space-x-4 mt-2">
+                <label className="inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={features.warranty}
+                    onChange={(e) =>
+                      setFeatures({ ...features, warranty: e.target.checked })
+                    }
+                    className="form-checkbox h-4 w-4 text-blue-600"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Warranty</span>
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={features.installer}
+                    onChange={(e) =>
+                      setFeatures({ ...features, installer: e.target.checked })
+                    }
+                    className="form-checkbox h-4 w-4 text-blue-600"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Installer</span>
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={features.purchase}
+                    onChange={(e) =>
+                      setFeatures({ ...features, purchase: e.target.checked })
+                    }
+                    className="form-checkbox h-4 w-4 text-blue-600"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Purchase</span>
+                </label>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label
                 htmlFor="purchase_from"
@@ -232,77 +295,113 @@ export function CreateRoomDialog({
               />
             </div>
 
-            {/* Warranty Section */}
-            <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-900">
-                Warranty Information
-              </h3>
+            {/* Warranty / Installer / Purchase Sections (conditionally shown) */}
+            {features.warranty && (
+              <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                <h3 className="text-sm font-medium text-gray-900">
+                  Warranty Information
+                </h3>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="warranty_provider"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Warranty Provider
-                  </Label>
-                  <Input
-                    id="warranty_provider"
-                    {...register("warranty_provider")}
-                    placeholder="Manufacturer"
-                    className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="warranty_provider"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Warranty Provider
+                    </Label>
+                    <Input
+                      id="warranty_provider"
+                      {...register("warranty_provider")}
+                      placeholder="Manufacturer"
+                      className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="warranty_start_date"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Warranty Start Date
+                    </Label>
+                    <Input
+                      id="warranty_start_date"
+                      type="date"
+                      {...register("warranty_start_date")}
+                      className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="warranty_start_date"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Warranty Start Date
-                  </Label>
-                  <Input
-                    id="warranty_start_date"
-                    type="date"
-                    {...register("warranty_start_date")}
-                    className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="warranty_end_date"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Warranty End Date
+                    </Label>
+                    <Input
+                      id="warranty_end_date"
+                      type="date"
+                      {...register("warranty_end_date")}
+                      className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="warranty_notes"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Warranty Notes
+                    </Label>
+                    <Textarea
+                      id="warranty_notes"
+                      {...register("warranty_notes")}
+                      placeholder="Additional warranty details..."
+                      rows={2}
+                      className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    />
+                  </div>
                 </div>
               </div>
+            )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="warranty_end_date"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Warranty End Date
-                  </Label>
-                  <Input
-                    id="warranty_end_date"
-                    type="date"
-                    {...register("warranty_end_date")}
-                    className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="warranty_notes"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Warranty Notes
-                  </Label>
-                  <Textarea
-                    id="warranty_notes"
-                    {...register("warranty_notes")}
-                    placeholder="Additional warranty details..."
-                    rows={2}
-                    className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                  />
-                </div>
+            {features.installer && (
+              <div className="space-y-2">
+                <Label
+                  htmlFor="installer"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Installer
+                </Label>
+                <Input
+                  id="installer"
+                  {...register("installer")}
+                  placeholder="Installer name"
+                  className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
-            </div>
+            )}
+
+            {features.purchase && (
+              <div className="space-y-2">
+                <Label
+                  htmlFor="purchase_from"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Purchased From
+                </Label>
+                <Input
+                  id="purchase_from"
+                  {...register("purchase_from")}
+                  placeholder="Store or vendor"
+                  className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label className="text-sm font-medium text-gray-700">

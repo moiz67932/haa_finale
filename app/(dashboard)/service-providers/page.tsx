@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,9 +35,21 @@ const categories = [
 
 export default function ServiceProvidersPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [openContact, setOpenContact] = useState<{
+    providerId: string | null;
+    kind: "phone" | "email" | null;
+  }>({ providerId: null, kind: null });
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const { data: providers, isLoading } = useServiceProviders();
+
+  const toggleContact = (providerId: string, kind: "phone" | "email") => {
+    if (openContact.providerId === providerId && openContact.kind === kind) {
+      setOpenContact({ providerId: null, kind: null });
+    } else {
+      setOpenContact({ providerId, kind });
+    }
+  };
 
   const filteredProviders = providers?.filter((provider) => {
     const matchesSearch =
@@ -68,13 +80,23 @@ export default function ServiceProvidersPage() {
               Find trusted professionals for your home and vehicle needs
             </p>
           </div>
-          <Button
-            onClick={() => setShowCreateDialog(true)}
-            className="bg-blue-600 text-white hover:bg-blue-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Provider
-          </Button>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Search providers or add new..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <Button
+              onClick={() => setShowCreateDialog(true)}
+              className="bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Add Provider
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filter */}
@@ -135,7 +157,7 @@ export default function ServiceProvidersPage() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
                 <Card className="hover:shadow-lg transition-shadow bg-white border border-gray-300 rounded-lg">
-                  <CardContent className="p-6">
+                  <CardContent className="p-6 relative">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <h3 className="text-xl font-semibold mb-1 text-gray-900">
@@ -171,6 +193,7 @@ export default function ServiceProvidersPage() {
                         <Button
                           size="sm"
                           variant="outline"
+                          onClick={() => toggleContact(provider.id, "phone")}
                           className="flex-1 bg-transparent border-gray-300 text-gray-600 hover:text-gray-800 hover:bg-gray-100"
                         >
                           <Phone className="w-4 h-4 mr-2" />
@@ -181,6 +204,7 @@ export default function ServiceProvidersPage() {
                         <Button
                           size="sm"
                           variant="outline"
+                          onClick={() => toggleContact(provider.id, "email")}
                           className="flex-1 bg-transparent border-gray-300 text-gray-600 hover:text-gray-800 hover:bg-gray-100"
                         >
                           <Mail className="w-4 h-4 mr-2" />
@@ -188,6 +212,78 @@ export default function ServiceProvidersPage() {
                         </Button>
                       )}
                     </div>
+
+                    <AnimatePresence>
+                      {openContact.providerId === provider.id &&
+                        openContact.kind === "phone" && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                            transition={{ duration: 0.18 }}
+                            className="absolute right-6 top-28 z-50 w-64 bg-white border border-gray-200 rounded-md shadow-lg p-3 text-gray-800"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="text-sm font-medium">Phone</div>
+                              <button
+                                onClick={() =>
+                                  setOpenContact({
+                                    providerId: null,
+                                    kind: null,
+                                  })
+                                }
+                                className="text-gray-400 hover:text-gray-600 ml-2"
+                                aria-label="Close"
+                              >
+                                ×
+                              </button>
+                            </div>
+                            <div className="mt-2 text-sm break-words">
+                              <a
+                                href={`tel:${provider.phone}`}
+                                className="text-blue-600 hover:underline"
+                              >
+                                {provider.phone}
+                              </a>
+                            </div>
+                          </motion.div>
+                        )}
+
+                      {openContact.providerId === provider.id &&
+                        openContact.kind === "email" && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                            transition={{ duration: 0.18 }}
+                            className="absolute right-6 top-28 z-50 w-64 bg-white border border-gray-200 rounded-md shadow-lg p-3 text-gray-800"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="text-sm font-medium">Email</div>
+                              <button
+                                onClick={() =>
+                                  setOpenContact({
+                                    providerId: null,
+                                    kind: null,
+                                  })
+                                }
+                                className="text-gray-400 hover:text-gray-600 ml-2"
+                                aria-label="Close"
+                              >
+                                ×
+                              </button>
+                            </div>
+                            <div className="mt-2 text-sm break-words">
+                              <a
+                                href={`mailto:${provider.email}`}
+                                className="text-blue-600 hover:underline"
+                              >
+                                {provider.email}
+                              </a>
+                            </div>
+                          </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     {provider.tags && provider.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1">

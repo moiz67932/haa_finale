@@ -87,6 +87,41 @@ export default function DashboardPage() {
           </p>
         </div>
 
+        {/* First-time user prompt: if no homes and no vehicles, prompt to add one */}
+        {(summary?.homes_count || 0) === 0 &&
+          (summary?.vehicles_count || 0) === 0 && (
+            <div className="mb-6">
+              <Card className="bg-orange-50 border-orange-200">
+                <CardContent className="p-6 flex flex-col md:flex-row items-start md:items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-orange-700">
+                      Get started by adding your first home or vehicle
+                    </h3>
+                    <p className="text-sm text-orange-700/90 mt-1">
+                      Add a home or vehicle now so HAA can start tracking
+                      maintenance, reminders, and warranties for you.
+                    </p>
+                  </div>
+                  <div className="mt-4 md:mt-0 flex items-center space-x-3">
+                    <Link href="/homes">
+                      <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                        Add a Home
+                      </Button>
+                    </Link>
+                    <Link href="/vehicles">
+                      <Button
+                        variant="outline"
+                        className="bg-white border border-blue-600 text-blue-600 hover:bg-blue-50"
+                      >
+                        Add a Vehicle
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {dashboardCards.map((card, index) => (

@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,9 @@ const projectSchema = z.object({
   materials_paint: z.string().optional(),
   cost: z.number().min(0).optional(),
   notes: z.string().optional(),
+  notification_sms: z.boolean().optional(),
+  notification_email: z.boolean().optional(),
+  notification_calendar: z.boolean().optional(),
 });
 
 type ProjectForm = z.infer<typeof projectSchema>;
@@ -67,24 +71,31 @@ export function CreateProjectDialog({
         }
       }
 
-      await createProjectMutation.mutateAsync({
+      const payload = {
         home_id: homeId,
         project_name: data.project_name,
         start_date: data.start_date || null,
         completion_date: data.completion_date || null,
         contractor: data.contractor || null,
         materials_paint: data.materials_paint || null,
-        cost: data.cost || null,
+        cost: data.cost ?? null,
         notes: data.notes || null,
         image_url: finalImageUrl || null,
-      });
+        notification_sms: data.notification_sms ?? false,
+        notification_email: data.notification_email ?? false,
+        notification_calendar: data.notification_calendar ?? false,
+      } as any;
+
+      await createProjectMutation.mutateAsync(payload);
 
       reset();
       setImageFile(null);
       setImageUrl("");
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating project:", error);
+      const message = error?.message || "Failed to create project";
+      toast.error(message);
     }
   };
 
@@ -263,6 +274,41 @@ export function CreateProjectDialog({
                 }}
                 disabled={createProjectMutation.isPending}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Notification Preferences
+              </Label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center text-sm">
+                  <input
+                    type="checkbox"
+                    {...register("notification_sms")}
+                    className="mr-2"
+                  />
+                  SMS
+                </label>
+                <label className="flex items-center text-sm">
+                  <input
+                    type="checkbox"
+                    {...register("notification_email")}
+                    className="mr-2"
+                  />
+                  Email
+                </label>
+                <label className="flex items-center text-sm">
+                  <input
+                    type="checkbox"
+                    {...register("notification_calendar")}
+                    className="mr-2"
+                  />
+                  Calendar Reminder
+                </label>
+              </div>
+              <p className="text-xs text-gray-500">
+                Choose how you'd like to be notified for project milestones.
+              </p>
             </div>
 
             <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">

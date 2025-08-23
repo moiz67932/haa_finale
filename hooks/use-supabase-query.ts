@@ -227,7 +227,21 @@ export function useCreateRoom() {
       return data;
     },
     onSuccess: (data) => {
+      // Optimistically update the rooms list for the home so UI shows the new room instantly
+      try {
+        queryClient.setQueryData<any[]>(["rooms", data.home_id], (old) => {
+          if (!old) return [data];
+          return [data, ...old];
+        });
+      } catch (e) {
+        // ignore
+      }
+
+      // Invalidate related queries to ensure other views refresh (dashboard counts, home detail)
       queryClient.invalidateQueries({ queryKey: ["rooms", data.home_id] });
+      queryClient.invalidateQueries({ queryKey: ["home", data.home_id] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+
       toast.success("Room created successfully");
     },
     onError: (error) => {

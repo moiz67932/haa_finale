@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,10 +11,27 @@ import { PageTransition } from "@/components/layout/page-transition";
 import { CreateHomeDialog } from "@/components/dialogs/create-home-dialog";
 import Link from "next/link";
 import Image from "next/image";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 export default function HomesPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { data: homes, isLoading } = useHomes();
+
+  // If the user has no homes, open the create dialog immediately on first render
+  // NOTE: this useEffect must be called unconditionally (always) to preserve hook order.
+  useEffect(() => {
+    if (!isLoading && (!homes || homes.length === 0)) {
+      setShowCreateDialog(true);
+    }
+    // only run on mount / when isLoading changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading]);
 
   if (isLoading) {
     return <Spinner />;
@@ -23,6 +40,31 @@ export default function HomesPage() {
   return (
     <PageTransition>
       <div className="p-8 bg-gray-50">
+        {/* Small homes carousel (add images under /public/carousels/homes-*.jpg) */}
+        <div className="mb-6">
+          <Carousel className="w-full">
+            <CarouselPrevious />
+            <CarouselContent className="flex">
+              {[
+                "/carousels/homes-1.png",
+                "/carousels/homes-2.png",
+                "/carousels/homes-3.png",
+              ].map((src, idx) => (
+                <CarouselItem key={idx} className="w-80">
+                  <div className="aspect-video relative rounded-xl overflow-hidden">
+                    <Image
+                      src={src}
+                      alt={`Home ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselNext />
+          </Carousel>
+        </div>
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-800">My Homes</h1>

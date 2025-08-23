@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,9 @@ const homeMaintenanceSchema = z.object({
   cost: z.number().min(0).optional(),
   notes: z.string().optional(),
   due_date: z.string().optional(),
+  notification_sms: z.boolean().optional(),
+  notification_email: z.boolean().optional(),
+  notification_calendar: z.boolean().optional(),
 });
 
 type HomeMaintenanceForm = z.infer<typeof homeMaintenanceSchema>;
@@ -69,23 +73,30 @@ export function CreateHomeMaintenanceDialog({
         }
       }
 
-      await createHomeMaintenanceMutation.mutateAsync({
+      const payload = {
         home_id: homeId,
         task_name: data.task_name,
         service_company: data.service_company || null,
         service_date: data.service_date || null,
-        cost: data.cost || null,
+        cost: data.cost ?? null,
         notes: data.notes || null,
         due_date: data.due_date || null,
         image_url: finalImageUrl || null,
-      });
+        notification_sms: data.notification_sms ?? false,
+        notification_email: data.notification_email ?? false,
+        notification_calendar: data.notification_calendar ?? false,
+      } as any;
+
+      await createHomeMaintenanceMutation.mutateAsync(payload);
 
       reset();
       setImageFile(null);
       setImageUrl("");
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating maintenance task:", error);
+      const message = error?.message || "Failed to create maintenance task";
+      toast.error(message);
     }
   };
 
@@ -249,6 +260,41 @@ export function CreateHomeMaintenanceDialog({
                 }}
                 disabled={createHomeMaintenanceMutation.isPending}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Notification Preferences
+              </Label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center text-sm">
+                  <input
+                    type="checkbox"
+                    {...register("notification_sms")}
+                    className="mr-2"
+                  />
+                  SMS
+                </label>
+                <label className="flex items-center text-sm">
+                  <input
+                    type="checkbox"
+                    {...register("notification_email")}
+                    className="mr-2"
+                  />
+                  Email
+                </label>
+                <label className="flex items-center text-sm">
+                  <input
+                    type="checkbox"
+                    {...register("notification_calendar")}
+                    className="mr-2"
+                  />
+                  Calendar Reminder
+                </label>
+              </div>
+              <p className="text-xs text-gray-500">
+                Notifications will be sent based on your preferences.
+              </p>
             </div>
 
             <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">

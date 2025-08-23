@@ -24,7 +24,31 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-const heroImages = ["/Pic1.png", "/Pic2.png", "/Pic3.png", "/Pic4.png"];
+// Categorized hero image sets. Drop image files into /public/carousels/ with the
+// names below (see README in the change summary after this edit).
+const heroImages = {
+  all: [
+    "/carousels/homepage-1.png",
+    "/carousels/homepage-2.png",
+    "/carousels/homepage-3.png",
+    "/carousels/homepage-4.png",
+    "/carousels/homepage-5.png",
+    "/carousels/homepage-6.png",
+  ],
+  home: [
+    "/carousels/home-1.png",
+    "/carousels/home-2.png",
+    "/carousels/home-3.png",
+  ],
+  auto: [
+    "/carousels/auto-1.png",
+    "/carousels/auto-2.png",
+    "/carousels/auto-3.png",
+  ],
+};
+// Default landing page category (change to 'home' or 'auto' if desired)
+const heroCategory: keyof typeof heroImages = "all";
+const activeHeroImages = heroImages[heroCategory];
 
 const features = [
   {
@@ -123,7 +147,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+      setCurrentImageIndex((prev) => (prev + 1) % activeHeroImages.length);
     }, 5000);
 
     return () => clearInterval(interval);
@@ -194,15 +218,15 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section
         id="home"
-        className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-500"
+        className="relative min-h-screen flex items-center justify-center overflow-hidden bg-transparent"
       >
         {/* Background Images */}
         <div className="absolute inset-0 z-0">
-          {heroImages.map((image, index) => (
+          {activeHeroImages.map((image, index) => (
             <div
               key={image}
               className={`absolute inset-0 transition-opacity duration-1000 ${
-                index === currentImageIndex ? "opacity-30" : "opacity-0"
+                index === currentImageIndex ? "opacity-100" : "opacity-0"
               }`}
             >
               <Image
@@ -215,6 +239,9 @@ export default function LandingPage() {
             </div>
           ))}
         </div>
+
+        {/* subtle overlay to keep text readable while preserving image colors */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/20 via-black/8 to-black/20" />
 
         <div className="relative z-10 text-center px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -229,6 +256,17 @@ export default function LandingPage() {
               <br />
               <span className="text-orange-500">EVERY WARRANTY</span>
             </h1>
+
+            {/* Prominent tagline */}
+            <p className="text-lg sm:text-2xl md:text-3xl text-white/95 font-semibold italic mb-6 max-w-3xl mx-auto leading-tight">
+              <span className="text-orange-500 font-bold">
+                Home and Auto Assistant
+              </span>
+              <span className="text-white/90">
+                {" "}
+                — because keeping track is no laughing matter.
+              </span>
+            </p>
 
             <div className="flex items-center justify-center space-x-4 mb-8">
               <div className="bg-white rounded-full px-6 py-2">
@@ -260,7 +298,7 @@ export default function LandingPage() {
 
         {/* Scroll Indicators */}
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2">
-          {heroImages.map((_, index) => (
+          {activeHeroImages.map((_, index) => (
             <div
               key={index}
               className={`w-2 h-2 rounded-full transition-colors ${
