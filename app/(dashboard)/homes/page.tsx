@@ -42,13 +42,16 @@ export default function HomesPage() {
                 "/carousels/homes-2.png",
                 "/carousels/homes-3.png",
               ].map((src, index) => (
-                <CarouselItem key={index} className="h-full w-full">
-                  <Image
-                    src={src}
-                    alt="Home image"
-                    fill
-                    className="object-cover rounded-lg"
-                  />
+                <CarouselItem key={index} className="h-full w-full p-0">
+                  <div className="relative h-full w-full">
+                    <Image
+                      src={src}
+                      alt="Home image"
+                      fill
+                      className="object-cover rounded-lg"
+                      priority={index === 0}
+                    />
+                  </div>
                 </CarouselItem>
               ))}
             </CarouselContent>

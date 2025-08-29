@@ -17,17 +17,30 @@ const vehicleSchema = z.object({
   make: z.string().min(1, "Make is required"),
   model: z.string().min(1, "Model is required"),
   year: z.preprocess(
-    (v) => (v === "" ? undefined : v),
+    (v) => {
+      if (v === "" || v === null || v === undefined) return undefined;
+      if (typeof v === "number") return Number.isNaN(v) ? undefined : v;
+      if (typeof v === "string") {
+        const n = parseInt(v, 10);
+        return Number.isNaN(n) ? undefined : n;
+      }
+      return v;
+    },
     z
       .number()
       .min(1900)
       .max(new Date().getFullYear() + 1)
   ),
   nickname: z.string().optional(),
-  mileage: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.number().optional()
-  ),
+  mileage: z.preprocess((v) => {
+    if (v === "" || v === null || v === undefined) return undefined;
+    if (typeof v === "number") return Number.isNaN(v) ? undefined : v;
+    if (typeof v === "string") {
+      const n = parseFloat(v);
+      return Number.isNaN(n) ? undefined : n;
+    }
+    return v;
+  }, z.number().optional()),
 });
 
 type VehicleForm = z.infer<typeof vehicleSchema>;
