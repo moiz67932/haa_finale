@@ -25,7 +25,10 @@ const homeMaintenanceSchema = z.object({
   task_name: z.string().min(1, "Task name is required"),
   service_company: z.string().optional(),
   service_date: z.string().optional(),
-  cost: z.number().min(0).optional(),
+  cost: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.number().min(0).optional()
+  ),
   notes: z.string().optional(),
   due_date: z.string().optional(),
   notification_sms: z.boolean().optional(),
@@ -55,7 +58,7 @@ export function CreateHomeMaintenanceDialog({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<HomeMaintenanceForm>({
+  } = useForm({
     resolver: zodResolver(homeMaintenanceSchema),
   });
 

@@ -23,11 +23,20 @@ import { X } from "lucide-react";
 const vehicleMaintenanceSchema = z.object({
   service_type: z.string().min(1, "Service type is required"),
   service_date: z.string().min(1, "Service date is required"),
-  mileage: z.number().min(0, "Mileage is required"),
-  cost: z.number().min(0).optional(),
+  mileage: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.number().min(0, "Mileage is required")
+  ),
+  cost: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.number().min(0).optional()
+  ),
   service_company: z.string().optional(),
   notes: z.string().optional(),
-  next_service_mileage: z.number().min(0).optional(),
+  next_service_mileage: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.number().min(0).optional()
+  ),
   next_service_date: z.string().optional(),
   oil_change_interval: z.number().optional(),
 });
@@ -56,7 +65,7 @@ export function CreateVehicleMaintenanceDialog({
     setValue,
     watch,
     formState: { errors },
-  } = useForm<VehicleMaintenanceForm>({
+  } = useForm({
     resolver: zodResolver(vehicleMaintenanceSchema),
   });
 

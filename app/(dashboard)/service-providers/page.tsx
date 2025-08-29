@@ -68,9 +68,11 @@ export default function ServiceProvidersPage() {
     return <Spinner />;
   }
 
+  const noProviders = !providers || providers.length === 0;
+
   return (
     <PageTransition>
-      <div className="p-8">
+      <div className="w-full p-8 bg-white rounded-2xl shadow-sm">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
@@ -92,7 +94,9 @@ export default function ServiceProvidersPage() {
             </div>
             <Button
               onClick={() => setShowCreateDialog(true)}
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className={`bg-blue-600 text-white hover:bg-blue-700 ${
+                noProviders ? "ring-2 ring-blue-400 animate-pulse" : ""
+              }`}
             >
               Add Provider
             </Button>
@@ -241,7 +245,7 @@ export default function ServiceProvidersPage() {
                             <div className="mt-2 text-sm break-words">
                               <a
                                 href={`tel:${provider.phone}`}
-                                className="text-blue-600 hover:underline"
+                                className="text-sky-600 hover:underline"
                               >
                                 {provider.phone}
                               </a>
@@ -276,7 +280,7 @@ export default function ServiceProvidersPage() {
                             <div className="mt-2 text-sm break-words">
                               <a
                                 href={`mailto:${provider.email}`}
-                                className="text-blue-600 hover:underline"
+                                className="text-sky-600 hover:underline"
                               >
                                 {provider.email}
                               </a>

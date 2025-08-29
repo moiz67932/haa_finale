@@ -27,7 +27,10 @@ const projectSchema = z.object({
   completion_date: z.string().optional(),
   contractor: z.string().optional(),
   materials_paint: z.string().optional(),
-  cost: z.number().min(0).optional(),
+  cost: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.number().min(0).optional()
+  ),
   notes: z.string().optional(),
   notification_sms: z.boolean().optional(),
   notification_email: z.boolean().optional(),
@@ -56,7 +59,7 @@ export function CreateProjectDialog({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<ProjectForm>({
+  } = useForm({
     resolver: zodResolver(projectSchema),
   });
 

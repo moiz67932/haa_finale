@@ -23,8 +23,14 @@ import { X } from "lucide-react";
 const vehicleRepairSchema = z.object({
   repair_type: z.string().min(1, "Repair type is required"),
   service_date: z.string().min(1, "Service date is required"),
-  mileage: z.number().min(0, "Mileage is required"),
-  cost: z.number().min(0).optional(),
+  mileage: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.number().min(0, "Mileage is required")
+  ),
+  cost: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.number().min(0).optional()
+  ),
   repair_facility: z.string().optional(),
   finding: z.string().optional(),
   part_warranty: z.string().optional(),
@@ -53,7 +59,7 @@ export function CreateVehicleRepairDialog({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<VehicleRepairForm>({
+  } = useForm({
     resolver: zodResolver(vehicleRepairSchema),
   });
 
@@ -72,16 +78,18 @@ export function CreateVehicleRepairDialog({
       }
 
       await createVehicleRepairMutation.mutateAsync({
-        vehicle_id: vehicleId,
-        repair_type: data.repair_type,
-        service_date: data.service_date,
-        mileage: data.mileage,
-        cost: data.cost || null,
-        repair_facility: data.repair_facility || null,
-        finding: data.finding || null,
-        part_warranty: data.part_warranty || null,
-        labor_warranty: data.labor_warranty || null,
-        image_url: finalImageUrl || null,
+        ...({
+          vehicle_id: vehicleId,
+          repair_type: data.repair_type,
+          service_date: data.service_date,
+          mileage: data.mileage,
+          cost: data.cost || null,
+          repair_facility: data.repair_facility || null,
+          finding: data.finding || null,
+          part_warranty: data.part_warranty || null,
+          labor_warranty: data.labor_warranty || null,
+          image_url: finalImageUrl || null,
+        } as any),
       });
 
       reset();

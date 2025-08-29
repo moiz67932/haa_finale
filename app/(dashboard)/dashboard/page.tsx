@@ -78,12 +78,14 @@ export default function DashboardPage() {
 
   return (
     <PageTransition>
-      <div className="p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-2">
-            Welcome back! Here&apos;s an overview of your home and auto
-            management.
+      <div className="space-y-8">
+        <div className="glass-panel rounded-3xl p-8 border border-white/40 shadow-xl">
+          <h1 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-500 to-orange-400">
+            Dashboard
+          </h1>
+          <p className="text-slate-600 mt-3 text-base md:text-lg max-w-2xl">
+            Welcome back! Here’s a concise snapshot of your homes, vehicles and
+            service ecosystem.
           </p>
         </div>
 
@@ -91,39 +93,37 @@ export default function DashboardPage() {
         {(summary?.homes_count || 0) === 0 &&
           (summary?.vehicles_count || 0) === 0 && (
             <div className="mb-6">
-              <Card className="bg-orange-50 border-orange-200">
-                <CardContent className="p-6 flex flex-col md:flex-row items-start md:items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-orange-700">
-                      Get started by adding your first home or vehicle
-                    </h3>
-                    <p className="text-sm text-orange-700/90 mt-1">
-                      Add a home or vehicle now so HAA can start tracking
-                      maintenance, reminders, and warranties for you.
-                    </p>
-                  </div>
-                  <div className="mt-4 md:mt-0 flex items-center space-x-3">
-                    <Link href="/homes">
-                      <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                        Add a Home
-                      </Button>
-                    </Link>
-                    <Link href="/vehicles">
-                      <Button
-                        variant="outline"
-                        className="bg-white border border-blue-600 text-blue-600 hover:bg-blue-50"
-                      >
-                        Add a Vehicle
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="glass-panel rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-orange-600">
+                    Get started by adding your first home or vehicle
+                  </h3>
+                  <p className="text-sm text-slate-600 mt-1 max-w-xl">
+                    Add a home or vehicle now so HAA can begin proactive
+                    reminders & warranty tracking.
+                  </p>
+                </div>
+                <div className="mt-4 md:mt-0 flex items-center gap-3">
+                  <Link href="/homes">
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/30">
+                      Add a Home
+                    </Button>
+                  </Link>
+                  <Link href="/vehicles">
+                    <Button
+                      variant="outline"
+                      className="bg-white/60 backdrop-blur border border-blue-600 text-blue-600 hover:bg-blue-50"
+                    >
+                      Add a Vehicle
+                    </Button>
+                  </Link>
+                </div>
+              </div>
             </div>
           )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {dashboardCards.map((card, index) => (
             <motion.div
               key={card.title}
@@ -132,26 +132,26 @@ export default function DashboardPage() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               <Link href={card.href}>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-white border border-gray-200 h-40 flex flex-col justify-between">
+                <Card className="glass-panel glass-card-hover transition-all cursor-pointer h-44 flex flex-col justify-between rounded-2xl">
                   <CardContent className="p-6 flex flex-col justify-between">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600 mb-1">
+                        <p className="text-xs uppercase tracking-wide font-semibold text-slate-500 mb-1">
                           {card.title}
                         </p>
-                        <p className="text-3xl font-bold text-gray-900">
+                        <p className="text-4xl font-bold text-slate-800">
                           {summary?.[card.key as keyof typeof summary] || 0}
                         </p>
                       </div>
                       <div
-                        className={`w-12 h-12 ${card.color} rounded-full flex items-center justify-center`}
+                        className={`w-14 h-14 ${card.color} rounded-2xl flex items-center justify-center shadow-inner shadow-black/10`}
                       >
-                        <card.icon className="w-6 h-6 text-white" />
+                        <card.icon className="w-7 h-7 text-white" />
                       </div>
                     </div>
                     <Button
                       variant="ghost"
-                      className="w-full justify-center mt-4 text-sm text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200"
+                      className="w-full justify-center mt-4 text-sm text-slate-600 hover:text-slate-900 bg-white/40 hover:bg-white/60 backdrop-blur rounded-lg"
                     >
                       View {card.title}
                     </Button>
@@ -162,35 +162,55 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-        >
-          <Card className="bg-white border border-gray-200 text-gray-600">
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Charts & Quick Actions Row */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="xl:col-span-2"
+          >
+            <div className="glass-panel rounded-2xl p-6 h-full flex flex-col">
+              <h3 className="text-lg font-semibold text-slate-700 mb-4">
+                Activity Overview (Coming Soon)
+              </h3>
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="rounded-xl bg-white/50 backdrop-blur flex items-center justify-center text-slate-500 text-sm border border-white/60">
+                  Chart Placeholder
+                </div>
+                <div className="rounded-xl bg-white/50 backdrop-blur flex items-center justify-center text-slate-500 text-sm border border-white/60">
+                  Chart Placeholder
+                </div>
+              </div>
+            </div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            <div className="glass-panel rounded-2xl p-6 h-full flex flex-col">
+              <h3 className="text-lg font-semibold text-slate-700 mb-4">
+                Quick Actions
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {quickActions.map((action) => (
                   <Link key={action.title} href={action.href}>
                     <Button
                       variant="outline"
-                      className="w-full h-24 flex flex-col items-center justify-center space-y-2 bg-white hover:bg-gray-50 border border-gray-200 hover:text-gray-900"
+                      className="w-full h-24 flex flex-col items-center justify-center space-y-2 bg-white/50 hover:bg-white border border-white/60 hover:text-slate-900 rounded-xl"
                     >
                       <Plus className="w-5 h-5" />
-                      <span className="text-sm font-medium">
+                      <span className="text-xs font-medium text-center">
                         {action.title}
                       </span>
                     </Button>
                   </Link>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </PageTransition>
   );

@@ -11,19 +11,17 @@ export default function DashboardLayout({
   return (
     <Suspense fallback={<Spinner />}>
       <AuthGuard>
-        <div className="flex h-screen bg-gray-50">
+        <div className="flex h-screen dashboard-wallpaper overflow-hidden">
           {/* Sidebar */}
-          <div className="w-64 bg-white shadow-lg flex-shrink-0">
+          <div className="w-64 glass-panel flex-shrink-0 backdrop-blur-md">
             <Sidebar />
           </div>
 
           {/* Main Content */}
-          <div className="flex flex-col flex-1">
-            {/* Navbar */}
-            <div className="h-16 bg-white shadow-md flex items-center px-6"></div>
-
-            {/* Page Content */}
-            <main className="flex-1 overflow-auto p-2">{children}</main>
+          <div className="flex flex-col flex-1 relative">
+            <main className="flex-1 overflow-auto p-6 space-y-6">
+              <div className="min-h-full">{children}</div>
+            </main>
           </div>
         </div>
       </AuthGuard>

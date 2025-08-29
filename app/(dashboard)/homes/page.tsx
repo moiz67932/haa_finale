@@ -23,15 +23,7 @@ export default function HomesPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { data: homes, isLoading } = useHomes();
 
-  // If the user has no homes, open the create dialog immediately on first render
-  // NOTE: this useEffect must be called unconditionally (always) to preserve hook order.
-  useEffect(() => {
-    if (!isLoading && (!homes || homes.length === 0)) {
-      setShowCreateDialog(true);
-    }
-    // only run on mount / when isLoading changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading]);
+  // Do not auto-open the create form. If there are no homes we'll highlight the Add button.
 
   if (isLoading) {
     return <Spinner />;
@@ -39,46 +31,43 @@ export default function HomesPage() {
 
   return (
     <PageTransition>
-      <div className="p-8 bg-gray-50">
+      <div className="w-full p-8 bg-white rounded-2xl shadow-sm">
         {/* Small homes carousel (add images under /public/carousels/homes-*.jpg) */}
-        <div className="mb-6">
-          <Carousel className="w-full">
+        <div className="mb-6 h-[40vh] w-full">
+          <Carousel className="w-full h-full">
             <CarouselPrevious />
-            <CarouselContent className="flex">
+            <CarouselContent className="flex h-full">
               {[
                 "/carousels/homes-1.png",
                 "/carousels/homes-2.png",
                 "/carousels/homes-3.png",
-              ].map((src, idx) => (
-                <CarouselItem key={idx} className="w-80">
-                  <div className="aspect-video relative rounded-xl overflow-hidden">
-                    <Image
-                      src={src}
-                      alt={`Home ${idx + 1}`}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
+              ].map((src, index) => (
+                <CarouselItem key={index} className="h-full w-full">
+                  <Image
+                    src={src}
+                    alt="Home image"
+                    fill
+                    className="object-cover rounded-lg"
+                  />
                 </CarouselItem>
               ))}
             </CarouselContent>
             <CarouselNext />
           </Carousel>
         </div>
-        <div className="flex items-center justify-between mb-8">
-          <div>
+        <div className="flex items-start justify-between mb-8 relative">
+          <div className="pr-4">
             <h1 className="text-3xl font-bold text-gray-800">My Homes</h1>
             <p className="text-gray-500 mt-2">
               Manage your properties and keep track of everything
             </p>
           </div>
-          <Button
-            onClick={() => setShowCreateDialog(true)}
-            className="bg-blue-500 text-white hover:bg-blue-600"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Home
-          </Button>
+          <div className="relative">
+            <CreateHomeDialog
+              open={showCreateDialog}
+              onOpenChange={setShowCreateDialog}
+            />
+          </div>
         </div>
 
         {homes && homes.length > 0 ? (
@@ -151,10 +140,7 @@ export default function HomesPage() {
           </div>
         )}
 
-        <CreateHomeDialog
-          open={showCreateDialog}
-          onOpenChange={setShowCreateDialog}
-        />
+        {/* Inline form now lives in header above */}
       </div>
     </PageTransition>
   );

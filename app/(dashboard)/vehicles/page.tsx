@@ -22,15 +22,7 @@ import {
 export default function VehiclesPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { data: vehicles, isLoading } = useVehicles();
-  // If the user has no vehicles, open the create dialog immediately on first render
-  // NOTE: this useEffect is intentionally placed before the early return to preserve hook order
-  useEffect(() => {
-    if (!isLoading && (!vehicles || vehicles.length === 0)) {
-      setShowCreateDialog(true);
-    }
-    // only run on mount / when isLoading changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading]);
+  // Do not auto-open create form; we'll keep the button on-page and highlight when empty
 
   if (isLoading) {
     return <Spinner />;
@@ -38,47 +30,44 @@ export default function VehiclesPage() {
 
   return (
     <PageTransition>
-      <div className="p-8 bg-gray-50">
+      <div className="w-full p-8 bg-white rounded-2xl shadow-sm">
         {/* Small vehicles carousel (add images under /public/carousels/vehicles-*.jpg) */}
-        <div className="mb-6">
-          <Carousel className="w-full">
+        <div className="mb-6 h-[40vh] w-full">
+          <Carousel className="w-full h-full">
             <CarouselPrevious />
-            <CarouselContent className="flex">
+            <CarouselContent className="flex h-full">
               {[
                 "/carousels/vehicles-1.png",
                 "/carousels/vehicles-2.png",
                 "/carousels/vehicles-3.png",
-              ].map((src, idx) => (
-                <CarouselItem key={idx} className="w-80">
-                  <div className="aspect-video relative rounded-xl overflow-hidden">
-                    <Image
-                      src={src}
-                      alt={`Vehicle ${idx + 1}`}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
+              ].map((src, index) => (
+                <CarouselItem key={index} className="h-full w-full">
+                  <Image
+                    src={src}
+                    alt="Vehicle image"
+                    fill
+                    className="object-cover rounded-lg"
+                  />
                 </CarouselItem>
               ))}
             </CarouselContent>
             <CarouselNext />
           </Carousel>
         </div>
-        <div className="flex items-center justify-between mb-8">
-          <div>
+        <div className="flex items-start justify-between mb-8 relative">
+          <div className="pr-4">
             <h1 className="text-3xl font-bold text-gray-800">My Vehicles</h1>
             <p className="text-gray-500 mt-2">
               Track maintenance, repairs, and keep your vehicles running
               smoothly
             </p>
           </div>
-          <Button
-            onClick={() => setShowCreateDialog(true)}
-            className="bg-blue-500 text-white hover:bg-blue-600"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Vehicle
-          </Button>
+          <div className="relative">
+            <CreateVehicleDialog
+              open={showCreateDialog}
+              onOpenChange={setShowCreateDialog}
+            />
+          </div>
         </div>
 
         {vehicles && vehicles.length > 0 ? (
@@ -155,10 +144,7 @@ export default function VehiclesPage() {
           </div>
         )}
 
-        <CreateVehicleDialog
-          open={showCreateDialog}
-          onOpenChange={setShowCreateDialog}
-        />
+        {/* Inline create vehicle form now lives in header above */}
       </div>
     </PageTransition>
   );

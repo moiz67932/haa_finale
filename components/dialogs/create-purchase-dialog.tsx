@@ -21,7 +21,10 @@ import { X } from "lucide-react";
 
 const purchaseSchema = z.object({
   item_name: z.string().min(1, "Item name is required"),
-  cost: z.number().min(0).optional(),
+  cost: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.number().min(0).optional()
+  ),
   purchase_date: z.string().optional(),
   retailer: z.string().optional(),
   sku: z.string().optional(),
@@ -50,7 +53,7 @@ export function CreatePurchaseDialog({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<PurchaseForm>({
+  } = useForm({
     resolver: zodResolver(purchaseSchema),
   });
 
@@ -65,14 +68,22 @@ export function CreatePurchaseDialog({
         }
       }
 
+      // retailer/sku are not columns in the purchases table schema;
+      // persist them into the `notes` column to avoid schema mismatch.
+      const retailerSkuNotes = [
+        data.retailer ? `Retailer: ${data.retailer}` : null,
+        data.sku ? `SKU: ${data.sku}` : null,
+      ]
+        .filter(Boolean)
+        .join(" \n");
+
       await createPurchaseMutation.mutateAsync({
         home_id: homeId,
         item_name: data.item_name,
         cost: data.cost || null,
         purchase_date: data.purchase_date || null,
-        purchase_from: data.retailer || null,
-        sku: data.sku || null,
         warranty_end_date: data.warranty_end_date || null,
+        notes: retailerSkuNotes || null,
         image_url: finalImageUrl || null,
       });
 
