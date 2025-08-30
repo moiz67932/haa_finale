@@ -34,6 +34,15 @@ export function Sidebar() {
   const { user, supabase } = useSupabase();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  // Derive a display name from user metadata, fall back to email
+  const userMeta: any = (user as any)?.user_metadata ?? {};
+  const displayName =
+    userMeta?.full_name ||
+    userMeta?.name ||
+    userMeta?.first_name ||
+    user?.email ||
+    "User";
+
   const handleSignOutConfirmed = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -99,7 +108,7 @@ export function Sidebar() {
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-[11px] font-medium text-gray-900 leading-tight truncate">
-              {user?.email}
+              {displayName}
             </p>
           </div>
           <Button
