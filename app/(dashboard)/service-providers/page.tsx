@@ -73,8 +73,8 @@ export default function ServiceProvidersPage() {
   return (
     <PageTransition>
       <div className="w-full p-8 bg-white rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between mb-8">
-          <div>
+        <div className="flex items-start justify-between mb-8 relative">
+          <div className="pr-4">
             <h1 className="text-3xl font-bold text-gray-900">
               Service Providers
             </h1>
@@ -82,24 +82,11 @@ export default function ServiceProvidersPage() {
               Find trusted professionals for your home and vehicle needs
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Search providers or add new..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <Button
-              onClick={() => setShowCreateDialog(true)}
-              className={`bg-blue-600 text-white hover:bg-blue-700 ${
-                noProviders ? "ring-2 ring-blue-400 animate-pulse" : ""
-              }`}
-            >
-              Add Provider
-            </Button>
+          <div className="relative flex flex-col items-end gap-3">
+            <CreateServiceProviderDialog
+              open={showCreateDialog}
+              onOpenChange={setShowCreateDialog}
+            />
           </div>
         </div>
 
@@ -334,10 +321,7 @@ export default function ServiceProvidersPage() {
           </div>
         )}
 
-        <CreateServiceProviderDialog
-          open={showCreateDialog}
-          onOpenChange={setShowCreateDialog}
-        />
+        {/* Dialog lives in header above */}
       </div>
     </PageTransition>
   );

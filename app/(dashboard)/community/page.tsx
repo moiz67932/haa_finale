@@ -24,11 +24,13 @@ function CommunityContent() {
 
   return (
     <PageTransition>
-      <div className="p-6 bg-gray-50 min-h-screen">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Community</h1>
-            <p className="text-gray-600 mt-2">
+      <div className="p-6 min-h-screen">
+        <div className="max-w-7xl mx-auto space-y-8">
+          <div className="glass-panel rounded-3xl p-8 border border-white/40 shadow-xl">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-500 to-orange-400">
+              Community
+            </h1>
+            <p className="text-slate-600 mt-3 text-base md:text-lg max-w-2xl">
               Connect with other homeowners and vehicle enthusiasts
             </p>
           </div>
@@ -37,7 +39,7 @@ function CommunityContent() {
             {/* Left Sidebar - Create Post */}
             <div className="lg:col-span-1">
               <div className="sticky top-6 space-y-6">
-                <Card className="bg-white border border-gray-200 shadow-sm">
+                <Card className="glass-panel rounded-2xl border-white/40 shadow-md">
                   <CardContent className="p-4">
                     <CreatePostDialog />
                   </CardContent>
@@ -51,7 +53,10 @@ function CommunityContent() {
                 {postsLoading ? (
                   <div className="space-y-4">
                     {[...Array(3)].map((_, i) => (
-                      <Card key={i} className="bg-white border border-gray-200">
+                      <Card
+                        key={i}
+                        className="glass-panel rounded-2xl border-white/40"
+                      >
                         <CardContent className="p-6">
                           <div className="flex items-center space-x-3 mb-4">
                             <Skeleton className="w-10 h-10 rounded-full" />
@@ -81,7 +86,7 @@ function CommunityContent() {
                     ))}
                   </div>
                 ) : (
-                  <Card className="bg-white border border-gray-200">
+                  <Card className="glass-panel rounded-2xl border-white/40">
                     <CardContent className="p-12 text-center">
                       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Users className="w-8 h-8 text-gray-400" />
@@ -102,7 +107,7 @@ function CommunityContent() {
             <div className="lg:col-span-1">
               <div className="sticky top-6 space-y-6">
                 {/* Suggested Posts */}
-                <Card className="bg-white border border-gray-200 shadow-sm">
+                <Card className="glass-panel rounded-2xl border-white/40 shadow-md">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg font-semibold text-gray-900 flex items-center">
                       <Users className="w-5 h-5 mr-2 text-blue-600" />
@@ -142,7 +147,7 @@ function CommunityContent() {
                 </Card>
 
                 {/* Trending Posts */}
-                <Card className="bg-white border border-gray-200 shadow-sm">
+                <Card className="glass-panel rounded-2xl border-white/40 shadow-md">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg font-semibold text-gray-900 flex items-center">
                       <TrendingUp className="w-5 h-5 mr-2 text-orange-600" />

@@ -11,9 +11,9 @@ export default function DashboardLayout({
   return (
     <Suspense fallback={<Spinner />}>
       <AuthGuard>
-        <div className="flex h-screen dashboard-wallpaper overflow-hidden">
+        <div className="flex h-screen overflow-hidden bg-[url('/carousels/homes-1.png')] bg-cover bg-center bg-fixed">
           {/* Sidebar */}
-          <div className="w-64 glass-panel flex-shrink-0 backdrop-blur-md">
+          <div className="w-48 flex-shrink-0 bg-white border-r border-gray-200">
             <Sidebar />
           </div>
 
