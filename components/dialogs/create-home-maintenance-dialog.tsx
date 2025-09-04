@@ -18,22 +18,22 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { useCreateHomeMaintenance } from "@/hooks/use-supabase-query";
+import { HOME_MAINTENANCE_SYSTEMS, LABOR_PART_WARRANTY } from "@/lib/constants";
 import { uploadPublicImage } from "@/lib/storage";
 import { X } from "lucide-react";
 
 const homeMaintenanceSchema = z.object({
-  task_name: z.string().min(1, "Task name is required"),
-  service_company: z.string().optional(),
-  service_date: z.string().optional(),
+  task_name: z.string().min(1, "Item / System serviced is required"),
+  service_company: z.string().min(1, "Service provider is required"),
+  service_date: z.string().min(1, "Date of service is required"),
+  findings: z.string().optional(),
+  labor_warranty: z.string().optional(),
+  part_warranty: z.string().optional(),
   cost: z.preprocess(
     (v) => (v === "" ? undefined : v),
     z.number().min(0).optional()
   ),
   notes: z.string().optional(),
-  due_date: z.string().optional(),
-  notification_sms: z.boolean().optional(),
-  notification_email: z.boolean().optional(),
-  notification_calendar: z.boolean().optional(),
 });
 
 type HomeMaintenanceForm = z.infer<typeof homeMaintenanceSchema>;
@@ -79,15 +79,19 @@ export function CreateHomeMaintenanceDialog({
       const payload = {
         home_id: homeId,
         task_name: data.task_name,
-        service_company: data.service_company || null,
-        service_date: data.service_date || null,
+        service_company: data.service_company,
+        service_date: data.service_date,
         cost: data.cost ?? null,
-        notes: data.notes || null,
-        due_date: data.due_date || null,
+        // Consolidate optional structured fields into notes JSON-ish text for now (DB schema limited)
+        notes: [
+          data.findings ? `Findings: ${data.findings}` : null,
+          data.labor_warranty ? `Labor Warranty: ${data.labor_warranty}` : null,
+          data.part_warranty ? `Part Warranty: ${data.part_warranty}` : null,
+          data.notes ? `Notes: ${data.notes}` : null,
+        ]
+          .filter(Boolean)
+          .join("\n"),
         image_url: finalImageUrl || null,
-        notification_sms: data.notification_sms ?? false,
-        notification_email: data.notification_email ?? false,
-        notification_calendar: data.notification_calendar ?? false,
       } as any;
 
       await createHomeMaintenanceMutation.mutateAsync(payload);
@@ -149,32 +153,38 @@ export function CreateHomeMaintenanceDialog({
             className="px-6 py-4 space-y-4 bg-white"
           >
             <div className="space-y-2">
-              <Label
-                htmlFor="task_name"
-                className="text-sm font-medium text-gray-700"
-              >
-                Task Name *
+              <Label className="text-sm font-medium text-gray-700">
+                Item / System Serviced *
               </Label>
-              <Input
-                id="task_name"
-                {...register("task_name")}
-                placeholder="HVAC Filter Replacement"
-                className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              <div className="flex gap-2">
+                <select
+                  {...register("task_name")}
+                  className="w-1/2 px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select system</option>
+                  {HOME_MAINTENANCE_SYSTEMS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+                <Input
+                  placeholder="Custom / details"
+                  className="w-1/2 px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  {...register("notes")}
+                />
+              </div>
               {errors.task_name && (
                 <p className="text-sm text-red-600">
-                  {errors.task_name.message}
+                  {errors.task_name.message as string}
                 </p>
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label
-                  htmlFor="service_company"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Service Company
+                <Label className="text-sm font-medium text-gray-700">
+                  Service Provider / Company *
                 </Label>
                 <Input
                   id="service_company"
@@ -182,14 +192,16 @@ export function CreateHomeMaintenanceDialog({
                   placeholder="ABC HVAC Services"
                   className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
+                {errors.service_company && (
+                  <p className="text-sm text-red-600">
+                    {errors.service_company.message as string}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label
-                  htmlFor="service_date"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Service Date
+                <Label className="text-sm font-medium text-gray-700">
+                  Date of Service *
                 </Label>
                 <Input
                   id="service_date"
@@ -197,16 +209,18 @@ export function CreateHomeMaintenanceDialog({
                   {...register("service_date")}
                   className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
+                {errors.service_date && (
+                  <p className="text-sm text-red-600">
+                    {errors.service_date.message as string}
+                  </p>
+                )}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="cost"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Cost
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2 col-span-1">
+                <Label className="text-sm font-medium text-gray-700">
+                  Cost (Optional)
                 </Label>
                 <Input
                   id="cost"
@@ -217,34 +231,48 @@ export function CreateHomeMaintenanceDialog({
                   className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-
               <div className="space-y-2">
-                <Label
-                  htmlFor="due_date"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Due Date
+                <Label className="text-sm font-medium text-gray-700">
+                  Labor Warranty
                 </Label>
-                <Input
-                  id="due_date"
-                  type="date"
-                  {...register("due_date")}
-                  className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+                <select
+                  {...register("labor_warranty")}
+                  className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">None</option>
+                  {LABOR_PART_WARRANTY.map((w) => (
+                    <option key={w} value={w}>
+                      {w}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">
+                  Part Warranty
+                </Label>
+                <select
+                  {...register("part_warranty")}
+                  className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">None</option>
+                  {LABOR_PART_WARRANTY.map((w) => (
+                    <option key={w} value={w}>
+                      {w}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="notes"
-                className="text-sm font-medium text-gray-700"
-              >
-                Notes
+              <Label className="text-sm font-medium text-gray-700">
+                Findings (Optional)
               </Label>
               <Textarea
-                id="notes"
-                {...register("notes")}
-                placeholder="Additional maintenance details..."
+                id="findings"
+                {...register("findings")}
+                placeholder="Inspection findings, recommendations..."
                 rows={3}
                 className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
               />
@@ -252,7 +280,7 @@ export function CreateHomeMaintenanceDialog({
 
             <div className="space-y-2">
               <Label className="text-sm font-medium text-gray-700">
-                Upload Image (Optional)
+                Upload Receipt / Report (Optional)
               </Label>
               <ImageUpload
                 value={imageUrl}
@@ -263,41 +291,6 @@ export function CreateHomeMaintenanceDialog({
                 }}
                 disabled={createHomeMaintenanceMutation.isPending}
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
-                Notification Preferences
-              </Label>
-              <div className="flex items-center gap-4">
-                <label className="flex items-center text-sm">
-                  <input
-                    type="checkbox"
-                    {...register("notification_sms")}
-                    className="mr-2"
-                  />
-                  SMS
-                </label>
-                <label className="flex items-center text-sm">
-                  <input
-                    type="checkbox"
-                    {...register("notification_email")}
-                    className="mr-2"
-                  />
-                  Email
-                </label>
-                <label className="flex items-center text-sm">
-                  <input
-                    type="checkbox"
-                    {...register("notification_calendar")}
-                    className="mr-2"
-                  />
-                  Calendar Reminder
-                </label>
-              </div>
-              <p className="text-xs text-gray-500">
-                Notifications will be sent based on your preferences.
-              </p>
             </div>
 
             <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">

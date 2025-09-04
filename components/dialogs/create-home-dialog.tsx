@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { HOME_PRESETS } from "@/lib/constants";
 import { useCreateHome } from "@/hooks/use-homes";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { X } from "lucide-react";
@@ -31,6 +32,7 @@ export function CreateHomeDialog({
   onOpenChange,
 }: CreateHomeDialogProps) {
   const [imageUrl, setImageUrl] = useState("");
+  const [preset, setPreset] = useState<string>("");
   const containerRef = useRef<HTMLDivElement | null>(null);
   const { user } = useSupabase();
   const createHomeMutation = useCreateHome();
@@ -54,6 +56,7 @@ export function CreateHomeDialog({
       });
       reset();
       setImageUrl("");
+      setPreset("");
       onOpenChange(false);
     } catch (err) {
       console.error(err);
@@ -123,6 +126,27 @@ export function CreateHomeDialog({
                     {errors.nickname.message as string}
                   </p>
                 )}
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-700">
+                  Quick Layout (optional)
+                </Label>
+                <select
+                  value={preset}
+                  onChange={(e) => setPreset(e.target.value)}
+                  className="mt-1 w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm cursor-pointer hover:border-transparent transition-colors"
+                  style={{ WebkitAppearance: "none" }}
+                >
+                  <option value="">Select preset (auto rooms)</option>
+                  {HOME_PRESETS.map((p) => (
+                    <option key={p.label} value={p.label}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-[11px] text-gray-500">
+                  Choosing a preset will auto-create core rooms (Kitchen, Living Room, Bedrooms, Bathrooms). Coming soon.
+                </p>
               </div>
               <div>
                 <Label

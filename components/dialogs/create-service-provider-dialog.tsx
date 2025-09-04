@@ -21,25 +21,15 @@ import { useCreateServiceProvider } from "@/hooks/use-service-providers";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { X } from "lucide-react";
 
-const categories = [
-  "Plumber",
-  "Electrician",
-  "HVAC",
-  "Contractor",
-  "Landscaper",
-  "Painter",
-  "Roofer",
-  "Mechanic",
-  "Other",
-];
+import { SERVICE_PROVIDER_TOP_LEVEL_CATEGORIES, SERVICE_PROVIDER_CATEGORY_MAP } from "@/lib/constants";
 
 const serviceProviderSchema = z.object({
-  name: z.string().min(1, "Business name is required"),
-  category: z.string().min(1, "Category is required"),
-  phone: z.string().optional(),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  address: z.string().optional(),
-  tags: z.string().optional(),
+  name: z.string().min(1, "Company name is required"),
+  service_type: z.string().min(1, "Service type is required"),
+  service_subtype: z.string().optional(),
+  service_area: z.string().min(1, "Service area is required"), // zip or city
+  website: z.string().url("Invalid URL").optional().or(z.literal("")),
+  reviews: z.string().optional(),
 });
 
 type ServiceProviderForm = z.infer<typeof serviceProviderSchema>;
@@ -54,7 +44,8 @@ export function CreateServiceProviderDialog({
   onOpenChange,
 }: CreateServiceProviderDialogProps) {
   const [imageUrl, setImageUrl] = useState("");
-  const [rating, setRating] = useState(5);
+  const [rating, setRating] = useState(5); // keep rating for future (not mandatory)
+  const [selectedCategory, setSelectedCategory] = useState("");
   const containerRef = useRef<HTMLDivElement | null>(null);
   const { user } = useSupabase();
   const createProviderMutation = useCreateServiceProvider();
@@ -67,27 +58,29 @@ export function CreateServiceProviderDialog({
     formState: { errors },
   } = useForm<ServiceProviderForm>({
     resolver: zodResolver(serviceProviderSchema),
+    mode: "onChange",
   });
 
   const onSubmit = async (data: ServiceProviderForm) => {
     if (!user) return;
 
     try {
-      const tags = data.tags
-        ? data.tags.split(",").map((tag) => tag.trim())
-        : [];
-
       await createProviderMutation.mutateAsync({
-        ...data,
-        rating: rating,
-        tags: tags.length > 0 ? tags : null,
+        name: data.name,
+        category: data.service_type, // store top-level category in existing column
+        tags: data.service_subtype ? [data.service_subtype] : null,
+        address: data.service_area,
         image_url: imageUrl || null,
+        website: data.website || null,
+        reviews: data.reviews || null,
+        rating,
         created_by: user.id,
-      });
+      } as any);
 
       reset();
       setImageUrl("");
-      setRating(5);
+  setRating(5);
+  setSelectedCategory("");
       onOpenChange(false);
     } catch (error) {
       console.error("Error creating service provider:", error);
@@ -97,30 +90,19 @@ export function CreateServiceProviderDialog({
   const handleClose = () => {
     reset();
     setImageUrl("");
-    setRating(5);
+  setRating(5);
+  setSelectedCategory("");
     onOpenChange(false);
   };
 
-  // Close on outside click / escape
+  // Close on Escape only (outside click handled via explicit overlay to avoid closing when interacting with portal-based selects)
   useEffect(() => {
     if (!open) return;
-    const handleClick = (e: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        onOpenChange(false);
-      }
-    };
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onOpenChange(false);
     };
-    window.addEventListener("mousedown", handleClick);
     window.addEventListener("keydown", handleKey);
-    return () => {
-      window.removeEventListener("mousedown", handleClick);
-      window.removeEventListener("keydown", handleKey);
-    };
+    return () => window.removeEventListener("keydown", handleKey);
   }, [open, onOpenChange]);
 
   return (
@@ -136,7 +118,12 @@ export function CreateServiceProviderDialog({
 
       {open && (
         <>
-          <div className="fixed inset-0 z-40" />
+          {/* Clickable overlay – keeps clicks inside Radix Select portal from being misinterpreted as outside since we removed global listener */}
+          <div
+            className="fixed inset-0 z-40"
+            onMouseDown={() => onOpenChange(false)}
+            aria-hidden="true"
+          />
           <motion.div
             ref={containerRef}
             className="absolute right-0 mt-2 w-[680px] max-h-[86vh] overflow-auto bg-white rounded-xl shadow-lg border border-gray-200 z-50 p-8"
@@ -144,153 +131,79 @@ export function CreateServiceProviderDialog({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
           >
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="name"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Business Name
-                  </Label>
+                  <Label className="text-sm font-medium text-gray-700">Company Name *</Label>
                   <Input
-                    id="name"
                     {...register("name")}
                     placeholder="ABC Plumbing Services"
-                    className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    style={{ backgroundColor: "white" }}
+                    className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-blue-500 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
-                  {errors.name && (
-                    <p className="text-sm text-red-600">
-                      {errors.name.message}
-                    </p>
-                  )}
+                  {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
                 </div>
-
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="category"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Category
-                  </Label>
+                  <Label className="text-sm font-medium text-gray-700">Service Type *</Label>
+                  {/* Hidden input to register with RHF */}
+                  <input type="hidden" {...register("service_type")}/>
                   <Select
-                    onValueChange={(value) => setValue("category", value)}
+                    value={selectedCategory || undefined}
+                    onValueChange={(val) => {
+                      setSelectedCategory(val);
+                      setValue("service_type", val, { shouldValidate: true });
+                      setValue("service_subtype", "");
+                    }}
                   >
-                    <SelectTrigger className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                      <SelectValue placeholder="Select category" />
+                    <SelectTrigger className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 [&>span[data-placeholder]]:text-blue-500">
+                      <SelectValue placeholder="Select service" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white text-gray-900 border border-gray-300 rounded-md">
-                      {categories.map((category) => (
-                        <SelectItem
-                          key={category}
-                          value={category}
-                          className="hover:bg-gray-100"
-                        >
-                          {category}
-                        </SelectItem>
+                    <SelectContent className="bg-white text-gray-900 border border-gray-300 rounded-md max-h-72 overflow-auto">
+                      {SERVICE_PROVIDER_TOP_LEVEL_CATEGORIES.map(cat => (
+                        <SelectItem key={cat} value={cat} className="hover:bg-gray-100">{cat}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  {errors.category && (
-                    <p className="text-sm text-red-600">
-                      {errors.category.message}
-                    </p>
-                  )}
+                  {errors.service_type && <p className="text-sm text-red-600">{errors.service_type.message}</p>}
                 </div>
-
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="phone"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Phone (Optional)
-                  </Label>
+                  <Label className="text-sm font-medium text-gray-700">Service Area (Zip/City) *</Label>
                   <Input
-                    id="phone"
-                    {...register("phone")}
-                    placeholder="(555) 123-4567"
-                    className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    style={{ backgroundColor: "white" }}
+                    {...register("service_area")}
+                    placeholder="90210 or Austin, TX"
+                    className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-blue-500 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
+                  {errors.service_area && <p className="text-sm text-red-600">{errors.service_area.message}</p>}
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              {selectedCategory && SERVICE_PROVIDER_CATEGORY_MAP[selectedCategory] && (
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="email"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Email (Optional)
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    {...register("email")}
-                    placeholder="contact@business.com"
-                    className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  {errors.email && (
-                    <p className="text-sm text-red-600">
-                      {errors.email.message}
-                    </p>
-                  )}
+                  <Label className="text-sm font-medium text-gray-700">Sub-Category</Label>
+                  <Select value={undefined} onValueChange={(val) => setValue("service_subtype", val, { shouldValidate: true })}>
+                    <SelectTrigger className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 [&>span[data-placeholder]]:text-blue-500">
+                      <SelectValue placeholder="Select sub-category" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white text-gray-900 border border-gray-300 rounded-md max-h-72 overflow-auto">
+                      {SERVICE_PROVIDER_CATEGORY_MAP[selectedCategory].map(sub => (
+                        <SelectItem key={sub} value={sub} className="hover:bg-gray-100">{sub}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="tags"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Tags (Optional)
-                  </Label>
-                  <Input
-                    id="tags"
-                    {...register("tags")}
-                    placeholder="licensed, insured, 24/7 service"
-                    className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <p className="text-xs text-gray-500">
-                    Separate tags with commas
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700">
-                    Rating
-                  </Label>
-                  <div className="mt-2">
-                    <StarRating
-                      rating={rating}
-                      interactive
-                      onChange={setRating}
-                      size="lg"
-                    />
-                  </div>
-                </div>
-              </div>
+              )}
 
               <div className="grid grid-cols-3 gap-4 items-start">
-                <div className="col-span-2 space-y-2">
-                  <Label
-                    htmlFor="address"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Address (Optional)
-                  </Label>
+                <div className="space-y-2 col-span-2">
+                  <Label className="text-sm font-medium text-gray-700">Website (Optional)</Label>
                   <Input
-                    id="address"
-                    {...register("address")}
-                    placeholder="123 Business St, City, State"
-                    className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    {...register("website")}
+                    placeholder="https://provider.com"
+                    className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-blue-500 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
+                  {errors.website && <p className="text-sm text-red-600">{errors.website.message}</p>}
                 </div>
-
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700">
-                    Upload Image (Optional)
-                  </Label>
+                  <Label className="text-sm font-medium text-gray-700">Logo (Optional)</Label>
                   <ImageUpload
                     value={imageUrl}
                     onChange={setImageUrl}
@@ -299,6 +212,22 @@ export function CreateServiceProviderDialog({
                     compact
                     small
                   />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">Customer Reviews (Optional)</Label>
+                <Input
+                  {...register("reviews")}
+                  placeholder="e.g., 'Great service, very professional'"
+                  className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-blue-500 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">Rating (Optional)</Label>
+                <div className="mt-1">
+                  <StarRating rating={rating} interactive onChange={setRating} size="lg" />
                 </div>
               </div>
 

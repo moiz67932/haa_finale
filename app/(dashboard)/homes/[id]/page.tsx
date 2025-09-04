@@ -21,7 +21,7 @@ import { CreateRoomDialog } from "@/components/dialogs/create-room-dialog";
 import { CreateOutsideItemDialog } from "@/components/dialogs/create-outside-item-dialog";
 import { CreatePurchaseDialog } from "@/components/dialogs/create-purchase-dialog";
 import { CreateHomeMaintenanceDialog } from "@/components/dialogs/create-home-maintenance-dialog";
-import { CreateProjectDialog } from "@/components/dialogs/create-project-dialog";
+import { CreateHomeImprovementDialog } from "@/components/dialogs/create-home-improvement-dialog";
 import {
   ArrowLeft,
   Plus,
@@ -173,11 +173,11 @@ function HomeDetailContent() {
                 <span>Maintenance</span>
               </TabsTrigger>
               <TabsTrigger
-                value="projects"
+                value="improvements"
                 className="flex items-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white"
               >
                 <Hammer className="w-4 h-4" />
-                <span>Projects</span>
+                <span>Improvements</span>
               </TabsTrigger>
             </TabsList>
 
@@ -589,7 +589,7 @@ function HomeDetailContent() {
               </motion.div>
             </TabsContent>
 
-            <TabsContent value="projects" className="space-y-6">
+            <TabsContent value="improvements" className="space-y-6">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -598,14 +598,14 @@ function HomeDetailContent() {
                 <Card className="bg-white border border-gray-200 shadow-sm">
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-xl font-semibold text-gray-900">
-                      Projects
+                      Home Improvements
                     </CardTitle>
                     <Button
-                      onClick={() => setActiveDialog("project")}
+                      onClick={() => setActiveDialog("improvement")}
                       className="bg-blue-600 hover:bg-blue-700 text-white"
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      Add Project
+                      Add Improvement
                     </Button>
                   </CardHeader>
                   <CardContent className="p-6">
@@ -675,17 +675,17 @@ function HomeDetailContent() {
                           <Hammer className="w-8 h-8 text-gray-400" />
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                          No projects yet
+                          No improvements yet
                         </h3>
                         <p className="text-gray-600 mb-4">
-                          Document your home improvement projects
+                          Start documenting your home improvement work
                         </p>
                         <Button
-                          onClick={() => setActiveDialog("project")}
+                          onClick={() => setActiveDialog("improvement")}
                           className="bg-blue-600 hover:bg-blue-700 text-white"
                         >
                           <Plus className="w-4 h-4 mr-2" />
-                          Add Project
+                          Add Improvement
                         </Button>
                       </div>
                     )}
@@ -718,8 +718,8 @@ function HomeDetailContent() {
         onOpenChange={(open) => !open && setActiveDialog(null)}
         homeId={homeId}
       />
-      <CreateProjectDialog
-        open={activeDialog === "project"}
+      <CreateHomeImprovementDialog
+        open={activeDialog === "improvement"}
         onOpenChange={(open) => !open && setActiveDialog(null)}
         homeId={homeId}
       />

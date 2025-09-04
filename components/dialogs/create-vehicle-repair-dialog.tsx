@@ -19,22 +19,15 @@ import { ImageUpload } from "@/components/ui/image-upload";
 import { useCreateVehicleRepair } from "@/hooks/use-supabase-query";
 import { uploadPublicImage } from "@/lib/storage";
 import { X } from "lucide-react";
+import { VEHICLE_REPAIR_ISSUES, LABOR_PART_WARRANTY } from "@/lib/constants";
 
 const vehicleRepairSchema = z.object({
-  repair_type: z.string().min(1, "Repair type is required"),
-  service_date: z.string().min(1, "Service date is required"),
-  mileage: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.number().min(0, "Mileage is required")
-  ),
-  cost: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.number().min(0).optional()
-  ),
+  repair_type: z.string().min(1, "Issue is required"),
+  service_date: z.string().min(1, "Repair date is required"),
+  mileage: z.preprocess((v) => (v === "" ? undefined : v), z.number().min(0, "Mileage is required")),
   repair_facility: z.string().optional(),
-  finding: z.string().optional(),
-  part_warranty: z.string().optional(),
-  labor_warranty: z.string().optional(),
+  warranty: z.string().optional(),
+  notes: z.string().optional(),
 });
 
 type VehicleRepairForm = z.infer<typeof vehicleRepairSchema>;
@@ -78,19 +71,18 @@ export function CreateVehicleRepairDialog({
       }
 
       await createVehicleRepairMutation.mutateAsync({
-        ...({
-          vehicle_id: vehicleId,
-          repair_type: data.repair_type,
-          service_date: data.service_date,
-          mileage: data.mileage,
-          cost: data.cost || null,
-          repair_facility: data.repair_facility || null,
-          finding: data.finding || null,
-          part_warranty: data.part_warranty || null,
-          labor_warranty: data.labor_warranty || null,
-          image_url: finalImageUrl || null,
-        } as any),
-      });
+        vehicle_id: vehicleId,
+        repair_type: data.repair_type,
+        service_date: data.service_date,
+        mileage: data.mileage,
+        repair_facility: data.repair_facility || null,
+        image_url: finalImageUrl || null,
+        // Embed simplified fields into notes until schema expanded
+        notes: [
+          data.notes ? `Notes: ${data.notes}` : null,
+          data.warranty ? `Warranty: ${data.warranty}` : null,
+        ].filter(Boolean).join('\n') || null,
+      } as any);
 
       reset();
       setImageFile(null);
@@ -147,23 +139,16 @@ export function CreateVehicleRepairDialog({
             className="px-6 py-4 space-y-4 bg-white"
           >
             <div className="space-y-2">
-              <Label
-                htmlFor="repair_type"
-                className="text-sm font-medium text-gray-700"
-              >
-                Repair Type *
-              </Label>
-              <Input
-                id="repair_type"
+              <Label className="text-sm font-medium text-gray-700">Issue / Finding *</Label>
+              <select
                 {...register("repair_type")}
-                placeholder="Brake Pad Replacement"
-                className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              {errors.repair_type && (
-                <p className="text-sm text-red-600">
-                  {errors.repair_type.message}
-                </p>
-              )}
+                className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select issue</option>
+                {VEHICLE_REPAIR_ISSUES.map(i => <option key={i} value={i}>{i}</option>)}
+                <option value="Other">Other</option>
+              </select>
+              {errors.repair_type && <p className="text-sm text-red-600">{errors.repair_type.message}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -211,85 +196,35 @@ export function CreateVehicleRepairDialog({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label
-                  htmlFor="cost"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Cost
-                </Label>
+                <Label className="text-sm font-medium text-gray-700">Service Provider</Label>
                 <Input
-                  id="cost"
-                  type="number"
-                  step="0.01"
-                  {...register("cost", { valueAsNumber: true })}
-                  placeholder="350.00"
+                  {...register("repair_facility")}
+                  placeholder="Repair shop name"
                   className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-
               <div className="space-y-2">
-                <Label
-                  htmlFor="repair_facility"
-                  className="text-sm font-medium text-gray-700"
+                <Label className="text-sm font-medium text-gray-700">Warranty</Label>
+                <select
+                  {...register("warranty")}
+                  className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  Repair Facility
-                </Label>
-                <Input
-                  id="repair_facility"
-                  {...register("repair_facility")}
-                  placeholder="ABC Auto Repair"
-                  className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+                  <option value="">None</option>
+                  {LABOR_PART_WARRANTY.map(w => <option key={w} value={w}>{w}</option>)}
+                </select>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="finding"
-                className="text-sm font-medium text-gray-700"
-              >
-                Finding
-              </Label>
+              <Label className="text-sm font-medium text-gray-700">Notes</Label>
               <Textarea
-                id="finding"
-                {...register("finding")}
-                placeholder="What was found during inspection..."
-                rows={2}
+                {...register("notes")}
+                placeholder="Brief description (parts replaced, labor details, etc.)"
+                rows={3}
                 className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="part_warranty"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Part Warranty End Date
-                </Label>
-                <Input
-                  id="part_warranty"
-                  type="date"
-                  {...register("part_warranty")}
-                  className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label
-                  htmlFor="labor_warranty"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Labor Warranty End Date
-                </Label>
-                <Input
-                  id="labor_warranty"
-                  type="date"
-                  {...register("labor_warranty")}
-                  className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            </div>
 
             <div className="space-y-2">
               <Label className="text-sm font-medium text-gray-700">

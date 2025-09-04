@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,6 +19,7 @@ import { ImageUpload } from "@/components/ui/image-upload";
 import { useCreateRoom } from "@/hooks/use-supabase-query";
 import { uploadPublicImage } from "@/lib/storage";
 import { X } from "lucide-react";
+import { ROOM_CATEGORY_MAP } from "@/lib/constants";
 
 const roomSchema = z.object({
   name: z.string().min(1, "Room name is required"),
@@ -48,6 +49,7 @@ export function CreateRoomDialog({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState("");
   const [category, setCategory] = useState<string>("");
+  const [roomType, setRoomType] = useState<string>("");
   const [features, setFeatures] = useState({
     warranty: true,
     installer: true,
@@ -59,10 +61,18 @@ export function CreateRoomDialog({
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<RoomForm>({
     resolver: zodResolver(roomSchema),
   });
+
+  // Sync selected roomType into the name field (user can still override manually later)
+  useEffect(() => {
+    if (roomType) {
+      setValue("name", roomType, { shouldDirty: true, shouldValidate: true });
+    }
+  }, [roomType, setValue]);
 
   const onSubmit = async (data: RoomForm) => {
     try {
@@ -160,28 +170,69 @@ export function CreateRoomDialog({
           >
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label
-                  htmlFor="name"
-                  className="text-sm font-medium text-gray-700"
+                <Label className="text-sm font-medium text-gray-700">
+                  Category
+                </Label>
+                <select
+                  value={category}
+                  onChange={(e) => {
+                    setCategory(e.target.value);
+                    setRoomType("");
+                  }}
+                  className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md cursor-pointer hover:border-transparent transition-colors"
                 >
+                  <option value="">Select category</option>
+                  {Object.keys(ROOM_CATEGORY_MAP).map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">
+                  Room Type
+                </Label>
+                <select
+                  value={roomType}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setRoomType(val);
+                  }}
+                  disabled={!category}
+                  className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md disabled:opacity-50 cursor-pointer hover:border-transparent transition-colors"
+                >
+                  <option value="">{category ? "Select room type" : "Select category first"}</option>
+                  {category &&
+                    ROOM_CATEGORY_MAP[category].map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">
                   Room Name *
                 </Label>
                 <Input
                   id="name"
                   {...register("name")}
                   placeholder="Living Room"
+                  defaultValue={roomType}
+                  value={undefined}
                   className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={() => { /* allow manual override via react-hook-form */ }}
                 />
                 {errors.name && (
                   <p className="text-sm text-red-600">{errors.name.message}</p>
                 )}
               </div>
-
               <div className="space-y-2">
-                <Label
-                  htmlFor="paint_color"
-                  className="text-sm font-medium text-gray-700"
-                >
+                <Label className="text-sm font-medium text-gray-700">
                   Paint Color
                 </Label>
                 <Input
@@ -225,25 +276,12 @@ export function CreateRoomDialog({
               </div>
             </div>
 
-            {/* Category + Feature Toggles */}
+            {/* Feature Toggles */}
             <div className="space-y-2">
               <Label className="text-sm font-medium text-gray-700">
-                Category
+                Additional Fields
               </Label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md"
-              >
-                <option value="">Select category</option>
-                <option value="electrical">Electrical</option>
-                <option value="lighting">Lighting</option>
-                <option value="tv_mounting">TV Mounting</option>
-                <option value="plumbing">Plumbing</option>
-                <option value="other">Other</option>
-              </select>
-
-              <div className="flex items-center space-x-4 mt-2">
+              <div className="flex flex-wrap items-center gap-4 mt-1">
                 <label className="inline-flex items-center">
                   <input
                     type="checkbox"

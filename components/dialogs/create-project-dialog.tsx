@@ -1,5 +1,9 @@
 "use client";
 
+"use client";
+// LEGACY: This dialog has been superseded by CreateHomeImprovementDialog.
+// Retained temporarily for reference and potential migration of additional fields.
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

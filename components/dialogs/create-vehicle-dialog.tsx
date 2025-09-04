@@ -12,25 +12,15 @@ import { ImageUpload } from "@/components/ui/image-upload";
 import { useCreateVehicle } from "@/hooks/use-vehicles";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { X } from "lucide-react";
+import { VEHICLE_MAKES, VEHICLE_MODELS } from "@/lib/constants";
+
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({ length: 35 }, (_, i) => currentYear + 1 - i); // Next year + past 34
 
 const vehicleSchema = z.object({
+  year: z.string().min(1, "Year is required"),
   make: z.string().min(1, "Make is required"),
   model: z.string().min(1, "Model is required"),
-  year: z.preprocess(
-    (v) => {
-      if (v === "" || v === null || v === undefined) return undefined;
-      if (typeof v === "number") return Number.isNaN(v) ? undefined : v;
-      if (typeof v === "string") {
-        const n = parseInt(v, 10);
-        return Number.isNaN(n) ? undefined : n;
-      }
-      return v;
-    },
-    z
-      .number()
-      .min(1900)
-      .max(new Date().getFullYear() + 1)
-  ),
   nickname: z.string().optional(),
   mileage: z.preprocess((v) => {
     if (v === "" || v === null || v === undefined) return undefined;
@@ -63,10 +53,16 @@ export function CreateVehicleDialog({
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(vehicleSchema),
+    mode: "onChange",
   });
+
+  const selectedMake = watch("make");
+  const modelOptions = selectedMake ? VEHICLE_MODELS[selectedMake] || [] : [];
 
   const onSubmit = async (data: VehicleForm) => {
     if (!user) return;
@@ -74,9 +70,10 @@ export function CreateVehicleDialog({
     try {
       await createVehicleMutation.mutateAsync({
         ...data,
+        year: parseInt(data.year, 10),
         image_url: imageUrl || null,
         user_id: user.id,
-      });
+      } as any);
 
       reset();
       setImageUrl("");
@@ -138,64 +135,51 @@ export function CreateVehicleDialog({
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="make"
-                    className="text-sm font-medium text-gray-700"
+                  <Label className="text-sm font-medium text-gray-700">Year *</Label>
+                  <select
+                    {...register("year")}
+                    className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    Make
-                  </Label>
-                  <Input
-                    id="make"
+                    <option value="">Select year</option>
+                    {YEARS.map((y) => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                  {errors.year && <p className="text-sm text-red-600">{errors.year.message as string}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">Make *</Label>
+                  <select
                     {...register("make")}
-                    placeholder="Toyota"
-                    className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  {errors.make && (
-                    <p className="text-sm text-red-600">
-                      {errors.make.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="model"
-                    className="text-sm font-medium text-gray-700"
+                    onChange={(e) => {
+                      setValue("make", e.target.value, { shouldValidate: true });
+                      // Reset model when make changes
+                      setValue("model", "", { shouldValidate: true });
+                    }}
+                    className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    Model
-                  </Label>
-                  <Input
-                    id="model"
+                    <option value="">Select make</option>
+                    {VEHICLE_MAKES.map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                  {errors.make && <p className="text-sm text-red-600">{errors.make.message as string}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">Model *</Label>
+                  <select
                     {...register("model")}
-                    placeholder="Camry"
-                    className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  {errors.model && (
-                    <p className="text-sm text-red-600">
-                      {errors.model.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="year"
-                    className="text-sm font-medium text-gray-700"
+                    onChange={(e) => setValue("model", e.target.value, { shouldValidate: true })}
+                    className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={!selectedMake}
+                    value={watch("model") || ""}
                   >
-                    Year
-                  </Label>
-                  <Input
-                    id="year"
-                    type="number"
-                    {...register("year", { valueAsNumber: true })}
-                    placeholder="2020"
-                    className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  {errors.year && (
-                    <p className="text-sm text-red-600">
-                      {errors.year.message}
-                    </p>
-                  )}
+                    <option value="">{selectedMake ? "Select model" : "Select make first"}</option>
+                    {modelOptions.map((model) => (
+                      <option key={model} value={model}>{model}</option>
+                    ))}
+                  </select>
+                  {errors.model && <p className="text-sm text-red-600">{errors.model.message as string}</p>}
                 </div>
               </div>
 
@@ -216,12 +200,7 @@ export function CreateVehicleDialog({
                 </div>
 
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="mileage"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Mileage (Optional)
-                  </Label>
+                  <Label htmlFor="mileage" className="text-sm font-medium text-gray-700">Mileage (Optional)</Label>
                   <Input
                     id="mileage"
                     type="number"

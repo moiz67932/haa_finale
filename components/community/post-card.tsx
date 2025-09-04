@@ -20,6 +20,7 @@ interface PostCardProps {
     social_link_url?: string;
     upvotes: number;
     created_at: string;
+  category?: string;
     profiles?: {
       id: string;
       full_name?: string;
@@ -68,9 +69,16 @@ export function PostCard({ post }: PostCardProps) {
 
         {/* Content */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-gray-900 leading-tight">
-            {post.title}
-          </h3>
+          <div className="flex items-start flex-wrap gap-2">
+            <h3 className="text-lg font-semibold text-gray-900 leading-tight">
+              {post.title}
+            </h3>
+            {post.category && (
+              <Badge className="bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs font-medium px-2 py-1 border border-blue-200">
+                {post.category}
+              </Badge>
+            )}
+          </div>
 
           <p className="text-gray-700 leading-relaxed">{post.content}</p>
 

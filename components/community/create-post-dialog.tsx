@@ -15,9 +15,11 @@ import { useCreatePost } from "@/hooks/use-supabase-query"
 import { uploadPublicImage } from "@/lib/storage"
 import { Plus, X } from "lucide-react"
 
+const COMMUNITY_CATEGORIES = ["Home", "Auto", "DIY", "Recommendations"] as const
 const postSchema = z.object({
   title: z.string().min(1, "Title is required"),
   content: z.string().min(1, "Content is required"),
+  category: z.enum(COMMUNITY_CATEGORIES, { required_error: "Category is required" }),
   tags: z.string().optional(),
   social_link_url: z.string().url("Invalid URL").optional().or(z.literal("")),
 })
@@ -64,7 +66,8 @@ export function CreatePostDialog() {
         tags: tags.length > 0 ? tags : undefined,
         image_url: finalImageUrl || undefined,
         social_link_url: data.social_link_url || undefined,
-      })
+        category: data.category,
+      } as any)
 
       reset()
       setImageFile(null)
@@ -132,6 +135,19 @@ export function CreatePostDialog() {
                 className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               {errors.title && <p className="text-sm text-red-600">{errors.title.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="category" className="text-sm font-medium text-gray-700">Category *</Label>
+              <select
+                id="category"
+                {...register("category")}
+                className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select a category</option>
+                {COMMUNITY_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              {errors.category && <p className="text-sm text-red-600">{errors.category.message}</p>}
             </div>
 
             <div className="space-y-2">

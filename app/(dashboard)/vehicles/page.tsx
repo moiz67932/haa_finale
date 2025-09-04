@@ -37,9 +37,16 @@ export default function VehiclesPage() {
             <CarouselPrevious />
             <CarouselContent className="flex h-full">
               {[
-                "/carousels/vehicles-1.png",
-                "/carousels/vehicles-2.png",
-                "/carousels/vehicles-3.png",
+                "/carousels/vehicles-1.png", // Flat tire
+                "/carousels/vehicles-2.png", // Check engine light
+                "/carousels/vehicles-3.png", // Oil change
+                "/carousels/vehicles-4.png", // Battery issue
+                "/carousels/vehicles-5.png", // Brake service
+                "/carousels/vehicles-6.png", // AC / Heating
+                "/carousels/vehicles-7.png", // Overheating
+                "/carousels/vehicles-8.png", // Headlight out
+                "/carousels/vehicles-9.png", // Transmission issue
+                "/carousels/vehicles-10.png", // Routine maintenance
               ].map((src, index) => (
                 <CarouselItem key={index} className="h-full w-full p-0">
                   <div className="relative h-full w-full">

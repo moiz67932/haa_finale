@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CORE_VEHICLE_MAINTENANCE_TYPES, VEHICLE_SERVICE_DEFAULT_INTERVALS, VEHICLE_SERVICE_DEFAULT_MONTH_INTERVALS } from "@/lib/constants";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/ui/image-upload";
@@ -70,7 +71,7 @@ export function CreateVehicleMaintenanceDialog({
   });
 
   const serviceTypeValue = watch("service_type");
-  const mileageValue = watch("mileage");
+  const mileageValue = watch("mileage") as number | undefined;
   const oilIntervalValue = watch("oil_change_interval");
 
   useEffect(() => {
@@ -176,23 +177,33 @@ export function CreateVehicleMaintenanceDialog({
             className="px-6 py-4 space-y-4 bg-white"
           >
             <div className="space-y-2">
-              <Label
-                htmlFor="service_type"
-                className="text-sm font-medium text-gray-700"
-              >
-                Service Type *
-              </Label>
-              <Input
-                id="service_type"
+              <Label className="text-sm font-medium text-gray-700">Service Type *</Label>
+              <select
                 {...register("service_type")}
-                placeholder="Oil Change"
-                className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              {errors.service_type && (
-                <p className="text-sm text-red-600">
-                  {errors.service_type.message}
-                </p>
-              )}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setValue("service_type", val, { shouldValidate: true });
+                  // Auto-set next service based on defaults
+                  if (val && mileageValue && VEHICLE_SERVICE_DEFAULT_INTERVALS[val]) {
+                    if (typeof mileageValue === 'number') {
+                      setValue("next_service_mileage", mileageValue + VEHICLE_SERVICE_DEFAULT_INTERVALS[val]);
+                    }
+                  }
+                  if (val && VEHICLE_SERVICE_DEFAULT_MONTH_INTERVALS[val]) {
+                    const months = VEHICLE_SERVICE_DEFAULT_MONTH_INTERVALS[val];
+                    const baseDate = new Date();
+                    baseDate.setMonth(baseDate.getMonth() + months);
+                    setValue("next_service_date", baseDate.toISOString().slice(0,10));
+                  }
+                }}
+                className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select service</option>
+                {CORE_VEHICLE_MAINTENANCE_TYPES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+              {errors.service_type && <p className="text-sm text-red-600">{errors.service_type.message}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">

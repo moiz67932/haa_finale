@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,9 +13,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { WARRANTY_OPTIONS } from "@/lib/constants";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/ui/image-upload";
-import { useCreatePurchase } from "@/hooks/use-supabase-query";
+import { useCreatePurchase, usePurchases } from "@/hooks/use-supabase-query";
 import { uploadPublicImage } from "@/lib/storage";
 import { X } from "lucide-react";
 
@@ -25,8 +26,8 @@ const purchaseSchema = z.object({
     (v) => (v === "" ? undefined : v),
     z.number().min(0).optional()
   ),
-  purchase_date: z.string().optional(),
-  retailer: z.string().optional(),
+  purchase_date: z.string().min(1, "Purchase date is required"),
+  retailer: z.string().min(1, "Retailer is required"),
   sku: z.string().optional(),
   warranty_end_date: z.string().optional(),
 });
@@ -47,6 +48,21 @@ export function CreatePurchaseDialog({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState("");
   const createPurchaseMutation = useCreatePurchase();
+  const { data: existingPurchases } = usePurchases(homeId);
+
+  const retailerOptions = useMemo(() => {
+    const set = new Set<string>();
+    existingPurchases?.forEach((p: any) => {
+      if (p.notes) {
+        const lines = String(p.notes).split(/\n|\r/);
+        lines.forEach((line) => {
+          const m = line.match(/Retailer:\s*(.+)/i);
+            if (m && m[1]) set.add(m[1].trim());
+        });
+      }
+    });
+    return Array.from(set).sort();
+  }, [existingPurchases]);
 
   const {
     register,
@@ -146,7 +162,7 @@ export function CreatePurchaseDialog({
                 htmlFor="item_name"
                 className="text-sm font-medium text-gray-700"
               >
-                Item Name *
+                Item Name / Description *
               </Label>
               <Input
                 id="item_name"
@@ -184,7 +200,7 @@ export function CreatePurchaseDialog({
                   htmlFor="purchase_date"
                   className="text-sm font-medium text-gray-700"
                 >
-                  Purchase Date
+                  Purchase Date *
                 </Label>
                 <Input
                   id="purchase_date"
@@ -201,14 +217,28 @@ export function CreatePurchaseDialog({
                   htmlFor="retailer"
                   className="text-sm font-medium text-gray-700"
                 >
-                  Retailer
+                  Retailer *
                 </Label>
                 <Input
                   id="retailer"
+                  list="retailer-options"
                   {...register("retailer")}
-                  placeholder="Home Depot"
+                  placeholder={retailerOptions.length ? "Select or type" : "Home Depot"}
                   className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
+                <datalist id="retailer-options">
+                  {retailerOptions.map((r) => (
+                    <option value={r} key={r} />
+                  ))}
+                </datalist>
+                {errors.retailer && (
+                  <p className="text-sm text-red-600">
+                    {errors.retailer.message as string}
+                  </p>
+                )}
+                {retailerOptions.length > 0 && (
+                  <p className="text-xs text-gray-500">Previously used retailers listed above.</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -228,18 +258,55 @@ export function CreatePurchaseDialog({
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="warranty_end_date"
-                className="text-sm font-medium text-gray-700"
-              >
-                Warranty End Date
+              <Label className="text-sm font-medium text-gray-700">
+                Warranty
               </Label>
+              <select
+                className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (!val) return;
+                  // Quick heuristic: set warranty_end_date based on selection if date empty
+                  if (val === "6 months") {
+                    const d = new Date();
+                    d.setMonth(d.getMonth() + 6);
+                    (document.getElementById("warranty_end_date") as HTMLInputElement | null)?.setAttribute(
+                      "value",
+                      d.toISOString().slice(0, 10)
+                    );
+                  } else if (val === "1 year") {
+                    const d = new Date();
+                    d.setFullYear(d.getFullYear() + 1);
+                    (document.getElementById("warranty_end_date") as HTMLInputElement | null)?.setAttribute(
+                      "value",
+                      d.toISOString().slice(0, 10)
+                    );
+                  } else if (val === "2 years") {
+                    const d = new Date();
+                    d.setFullYear(d.getFullYear() + 2);
+                    (document.getElementById("warranty_end_date") as HTMLInputElement | null)?.setAttribute(
+                      "value",
+                      d.toISOString().slice(0, 10)
+                    );
+                  }
+                }}
+              >
+                <option value="">Select warranty</option>
+                {WARRANTY_OPTIONS.map((w) => (
+                  <option key={w} value={w}>
+                    {w}
+                  </option>
+                ))}
+              </select>
               <Input
                 id="warranty_end_date"
                 type="date"
                 {...register("warranty_end_date")}
-                className="w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="mt-2 w-full px-3 py-2 bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+              <p className="text-xs text-gray-500">
+                Selecting a warranty will auto-suggest an end date which you can adjust.
+              </p>
             </div>
 
             <div className="space-y-2">

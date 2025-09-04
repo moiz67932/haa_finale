@@ -38,9 +38,16 @@ export default function HomesPage() {
             <CarouselPrevious />
             <CarouselContent className="flex h-full">
               {[
-                "/carousels/homes-1.png",
-                "/carousels/homes-2.png",
-                "/carousels/homes-3.png",
+                "/carousels/homes-1.png", // Plumbing leak
+                "/carousels/homes-2.png", // Electrical issue
+                "/carousels/homes-3.png", // HVAC
+                "/carousels/homes-4.png", // Appliance repair
+                "/carousels/homes-5.png", // Painting
+                "/carousels/homes-6.png", // Flooring
+                "/carousels/homes-7.png", // Roof leak
+                "/carousels/homes-8.png", // Gutter clogged
+                "/carousels/homes-9.png", // Lawn care
+                "/carousels/homes-10.png", // Pest control
               ].map((src, index) => (
                 <CarouselItem key={index} className="h-full w-full p-0">
                   <div className="relative h-full w-full">
