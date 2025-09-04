@@ -33,9 +33,9 @@ export default function VehiclesPage() {
       <div className="w-full p-8 bg-white rounded-2xl shadow-sm">
         {/* Small vehicles carousel (add images under /public/carousels/vehicles-*.jpg) */}
         <div className="mb-6 h-[40vh] w-full">
-          <Carousel className="w-full h-full">
+          <Carousel className="w-full h-full ">
             <CarouselPrevious />
-            <CarouselContent className="flex h-full">
+            <CarouselContent className="flex h-full rounded-md">
               {[
                 "/carousels/vehicles-1.png", // Flat tire
                 "/carousels/vehicles-2.png", // Check engine light
@@ -48,13 +48,13 @@ export default function VehiclesPage() {
                 "/carousels/vehicles-9.png", // Transmission issue
                 "/carousels/vehicles-10.png", // Routine maintenance
               ].map((src, index) => (
-                <CarouselItem key={index} className="h-full w-full p-0">
-                  <div className="relative h-full w-full">
+                <CarouselItem key={index} className="h-full rounded-md w-full p-0">
+                  <div className="relative rounded-md h-full w-full bg-gradient-to-br from-white/70 to-white/40 backdrop-blur-sm rounded-lg flex items-center justify-center p-4">
                     <Image
                       src={src}
                       alt="Vehicle image"
                       fill
-                      className="object-cover rounded-lg"
+                      className="object-cover rounded-md drop-shadow-md !p-4"
                       priority={index === 0}
                     />
                   </div>
