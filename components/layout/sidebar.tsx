@@ -12,6 +12,9 @@ import {
   MessageSquare,
   Bell,
   LogOut,
+  Wrench,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -33,6 +36,7 @@ export function Sidebar() {
   const router = useRouter();
   const { user, supabase } = useSupabase();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [homesOpen, setHomesOpen] = useState(() => pathname.startsWith("/homes/"));
 
   // Derive a display name from user metadata, fall back to email
   const userMeta: any = (user as any)?.user_metadata ?? {};
@@ -69,16 +73,59 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-2 py-4">
+      <nav className="flex-1 space-y-1 px-2 py-4 text-[13px]">
         {navigation.map((item) => {
-          const isActive =
-            pathname === item.href || pathname.startsWith(item.href + "/");
+          if (item.name === "Homes") {
+            const isActiveTop = pathname === "/homes" || pathname.startsWith("/homes/");
+            return (
+              <div key={item.name} className="space-y-1">
+                <button
+                  onClick={() => setHomesOpen(o => !o)}
+                  className={cn(
+                    "w-full flex items-center px-3 py-2 font-medium rounded-md transition-colors text-left",
+                    isActiveTop ? "bg-primary text-white" : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  )}
+                >
+                  <item.icon
+                    className={cn(
+                      "mr-2 h-4 w-4 flex-shrink-0",
+                      isActiveTop ? "text-white" : "text-gray-400 group-hover:text-gray-500"
+                    )}
+                  />
+                  <span className="flex-1">Homes</span>
+                  {homesOpen ? <ChevronDown className="w-3.5 h-3.5"/> : <ChevronRight className="w-3.5 h-3.5"/>}
+                </button>
+                {homesOpen && (
+                  <div className="ml-6 space-y-1">
+                    <Link
+                      href="/homes"
+                      className={cn(
+                        "block px-2 py-1.5 rounded-md transition-colors",
+                        pathname === "/homes" ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-100"
+                      )}
+                    >Overview</Link>
+                    <Link
+                      href="/homes/services"
+                      className={cn(
+                        "flex items-center gap-1 px-2 py-1.5 rounded-md transition-colors",
+                        pathname.startsWith("/homes/services") ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:bg-gray-100"
+                      )}
+                    >
+                      <Wrench className="w-3.5 h-3.5"/> <span>Services</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link
               key={item.name}
               href={item.href}
               className={cn(
-                "group flex items-center px-3 py-2 text-[13px] font-medium rounded-md transition-colors",
+                "group flex items-center px-3 py-2 font-medium rounded-md transition-colors",
                 isActive
                   ? "bg-primary text-white"
                   : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
